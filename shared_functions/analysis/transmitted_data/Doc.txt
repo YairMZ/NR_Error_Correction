@@ -1,0 +1,5 @@
+To run:
+
+1. Run parser to parse bin files
+
+2. "histograms" shows some stats regrading parsed transmitted data.

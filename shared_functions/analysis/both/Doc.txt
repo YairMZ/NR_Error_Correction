@@ -1,0 +1,7 @@
+To run:
+
+1. Find_BER finds BER
+
+2. mav_dialect instantiates the Mathworks mavlink dialect object with the most recent common.xml
+
+3. entropy calculates extropy

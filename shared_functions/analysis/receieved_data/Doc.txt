@@ -1,0 +1,7 @@
+To run:
+
+1. Run parser to parse txt files
+
+2. "histograms" shows some stats regrading parsed received data.
+
+3. MAVLink decode attempts dome reconstruction of messages (not yet working).

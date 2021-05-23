@@ -1,0 +1,12 @@
+Rafael messages:
+LPI:
+Sent 70 messages. 52 messages were received, all of which were successful. No point in trying to recover.
+
+182B:
+Sent 134 messages. 102 were received. 73 receptions were successful.
+
+2023B:
+Sent 41 messages. 36 were received. 22 receptions were successful.
+
+4048B:
+Sent 12 messages. 7 were received. 0 receptions were successful.

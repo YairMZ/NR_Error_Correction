@@ -1,0 +1,23 @@
+On the experiment pf July 10th 2019, we have:
+	
+	four files with more the 10 acoustic transmissions:
+		/Users/Simba/Google Drive (mazaly@post.bgu.ac.il)/repositories/acoustic_tests/Transmitted_data/10_07_2019_13_01_13_stats.mat
+		/Users/Simba/Google Drive (mazaly@post.bgu.ac.il)/repositories/acoustic_tests/Transmitted_data/10_07_2019_12_20_44_stats.mat 
+		/Users/Simba/Google Drive (mazaly@post.bgu.ac.il)/repositories/acoustic_tests/Transmitted_data/10_07_2019_11_57_55_stats.mat 
+		/Users/Simba/Google Drive (mazaly@post.bgu.ac.il)/repositories/acoustic_tests/Transmitted_data/10_07_2019_10_00_27_stats.mat
+	
+	Two files of received captured data:
+		/Users/Simba/Google Drive (mazaly@post.bgu.ac.il)/repositories/acoustic_tests/Raw_captures/Eilat_July_19/10_07_2019/raw_capture_log_10_07_2019__12_56_54.mat
+		/Users/Simba/Google Drive (mazaly@post.bgu.ac.il)/repositories/acoustic_tests/Raw_captures/Eilat_July_19/10_07_2019/raw_capture_log_10_07_2019__12_21_36.mat 
+
+	
+Mission from 12:20:
+	transmitted messages:
+	received messages: 34
+	Acquisition failed: 3
+	
+
+transmission structure:
+
+	
+	 
