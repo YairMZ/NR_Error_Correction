@@ -1,0 +1,4 @@
+Files description:
+    -   hc_binary_tx.pickle - nested python lists. Each list a binary transmission
+    -   ship_rx.pickle - a dictionary. "encoded" holds encoded binary per tx, and "ex_success" is a boolean flag
+    indicating if whole rx was successful.
