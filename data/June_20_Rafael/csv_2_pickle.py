@@ -15,8 +15,14 @@ with open('rx_success.csv', 'r') as file:
     for row in reader:
         rx_success = [int(num) for num in row]
 
-ship_rx = {"encoded": binary_rx, "rx_success": rx_success}
+binary_tx = []
+with open('tx.csv', 'r') as file:
+    reader = csv.reader(file)
+    for row in reader:
+        binary_tx.append([int(num) for num in row])
 
-with open('ship_rx.pickle', 'wb') as file:
-    pickle.dump(ship_rx, file)
+hc_to_ship = {"encoded_rx": binary_rx, "rx_success": rx_success, "encoded_tx": binary_tx}
+
+with open('hc_to_ship.pickle', 'wb') as file:
+    pickle.dump(hc_to_ship, file)
 
