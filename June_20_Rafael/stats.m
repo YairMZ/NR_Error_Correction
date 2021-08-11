@@ -70,7 +70,7 @@ groupingVec = [HC_to_Ship(mask).num_of_MAV_msgs_rx];
 fig3 = figure(3)
 gscatter(xvec,berVec, groupingVec,[],[],25);
 format_figure(fig3, 'XLabel', 'Water Temperature [C]', 'YLabel', 'BER')
-saveas(fig3,'BER_vs_water_temperature.eps','epsc')
+% saveas(fig3,'BER_vs_water_temperature.eps','epsc')
 
 
 %% tx len
