@@ -2,7 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from senders import KnownSender
 from protocol_meta import dialect_meta as meta
-from protocol_meta import hamming_distance_2_valid_header, FrameHeader, is_valid_header,MAVError
+from protocol_meta import hamming_distance_2_valid_header, FrameHeader, is_valid_header, MAVError
 from typing import Callable
 from array import array
 import numpy as np

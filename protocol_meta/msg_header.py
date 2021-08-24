@@ -1,5 +1,4 @@
-from .protocol_meta import dialect
-from .protocol import dialect_meta as meta
+from .protocol_meta import dialect_meta as meta
 import bitstring
 
 
@@ -13,10 +12,9 @@ def is_valid_header(buffer: bytes) -> bool:
         return False
     # first byte must be STX (start of frame)
     # second and sixth byte are dependent on each other due to protocol limitation.
-    t1 = buffer[0]
-    t2 = buffer[5]
-    t3 = buffer[1]
-    t4 = meta.msgs_length
+    # buffer[0] stx
+    # buffer[5]  msg_id
+    # buffer[1]  msg_len
     return buffer[0] == meta.stx and buffer[5] in meta.msgs_length.keys() and \
            meta.msgs_length.get(buffer[5]) == buffer[1]
 
@@ -24,8 +22,9 @@ def is_valid_header(buffer: bytes) -> bool:
 def hamming_distance_2_valid_header(buffer: bytes) -> tuple:
     """
     The function calculates the Hamming distance to the closest valid header.
+
     :param buffer:
-    :return: a tuple of min_dist, chosen_msg_id if the buffer is of correct length, otherwise None. None
+    :return: a tuple of (min_dist, chosen_msg_id) where chosen_msg_id the closest msg id with respect to valid headers, and min_dist is the minimal Hamming distance found.
     """
     if len(buffer) != meta.header_len:
         return None, None
@@ -52,13 +51,11 @@ class FrameHeader:
     """A class holding a MAVLink message header"""
 
     def __init__(self, msg_id: int, sys_id: int, comp_id: int, seq: int):
-        try:
-            field_types = dialect.mavlink_map.get(msg_id).fieldtypes
-        except AttributeError:
+        if msg_id not in meta.msgs_length.keys():
             raise ValueError("msg_id {} does not exist".format(msg_id))
-        length = meta.msgs_length.get(msg_id)
+        length: int = meta.msgs_length.get(msg_id)
 
-        self.buffer = bytes([meta.stx, length, seq, sys_id, comp_id, msg_id])
+        self.buffer: bytes = bytes([meta.stx, length, seq, sys_id, comp_id, msg_id])
 
     @property
     def length(self) -> int:
@@ -102,13 +99,3 @@ class FrameHeader:
             raise ValueError("incorrect header length of {}".format(len(buffer)))
         seq, sys_id, comp_id, msg_id = tuple(b for b in buffer[2:])
         return cls(msg_id, sys_id, comp_id, seq)
-
-
-if __name__ == "__main__":
-    hdr = FrameHeader(dialect.MAVLINK_MSG_ID_GLOBAL_POSITION_INT, 1, 1, 1)
-    bits = hdr.bit_string
-    print(bits)
-    other_bits = bitstring.BitArray(bits)
-    other_bits[0:3] = 0
-    print(hdr.hamming_distance(other_bits.bytes))
-    test = FrameHeader.from_buffer(bytes([i for i in range(5)])+b"\x21")
