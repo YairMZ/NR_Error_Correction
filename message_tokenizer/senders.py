@@ -6,25 +6,32 @@ class KnownSender:
     specific msg_id from specific comp_id's"""
 
     def __init__(self, sys_id: int):
-        self.sys_id = sys_id
-        self.msg_id = {}  # keys are msg_id's, values are count
-        self.comp_id = {}  # keys are comp_id's, values are count
-        self.msg_count = 1  # overall msg count for sender
-        self.msgs_log: dict() = {}  # overall message log for sender including msg_id, comp_id and and actual buffer.
+        self.sys_id: int = sys_id
+        self.msg_id: dict = {}  # keys are msg_id's, values are count
+        self.comp_id: dict = {}  # keys are comp_id's, values are count
+        self.msg_count: int = 0  # overall msg count for sender
+        self.msgs_log: dict = {}  # overall message log for sender including msg_id, comp_id and and actual buffer.
         # Keys are comp_id, and values are dicts with keys as msg_ids. These dicts ave as value a list of buffers.
         # example: {comp_id1: {msg_id1: [buff1, buff2], msg_id2: [buff3, buff4, buff5]}}
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.sys_id)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, KnownSender):
             return self.sys_id == other.sys_id
         if isinstance(other, int):
             return self.sys_id == other
         return False
 
-    def register_msg(self, comp_id: int, msg_id: int, buffer: bytes):
+    def register_msg(self, comp_id: int, msg_id: int, buffer: bytes) -> None:
+        """
+        register a received message for this sender.
+
+        :param comp_id: component id of sender
+        :param msg_id: msg id of sender
+        :param buffer: actual buffer of containing message
+        """
         if comp_id not in self.comp_id:
             self.comp_id[comp_id] = 1
             self.msgs_log[comp_id] = {}
@@ -40,8 +47,8 @@ class KnownSender:
             self.msgs_log[comp_id][msg_id].append(buffer)
         self.msg_count += 1
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "system " + str(self.sys_id) + ", component " + str(self.comp_id) + ", msg " + str(self.msg_id)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.sys_id) + "_" + str(self.msgs_log)
