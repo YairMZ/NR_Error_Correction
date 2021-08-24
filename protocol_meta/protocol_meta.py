@@ -1,5 +1,6 @@
 import data_generation.mavlink_utils.clustering_dialect as dialect
 from data_generation.mavlink_utils.clustering_dialect import MAVError  # expose class directly to whomever imports meta
+from typing import Callable
 
 STX = dialect.PROTOCOL_MARKER_V1
 field_lengths = {"uint32_t": 4, "float": 4, "uint16_t": 2, "uint8_t": 1, "int32_t": 4, }  # field length in bytes
@@ -9,9 +10,10 @@ crc_length = 2
 protocol_overhead = header_length + crc_length
 
 
-class MavlinkDialectStructure:
+class MavlinkDialectMeta:
     """This class describes the structure of a general Mavlink dialect"""
-    def __init__(self, stx: int,  header_len: int, crc_len: int, msg_ids_: list, field_lengths_: dict):
+    def __init__(self, stx: int,  header_len: int, crc_len: int, msg_ids_: list, field_lengths_: dict,
+                 protocol_parser: Callable):
         self.stx: int = stx
         self.header_len: int = header_len
         self.crc_len: int = crc_len
@@ -20,6 +22,7 @@ class MavlinkDialectStructure:
         self.protocol_overhead: int = header_len + crc_len
         self.msgs_length: dict = {msg_id: self.__msg_len(msg_id) for msg_id in msg_ids}
         self.msgs_fields: dict = {msg_id: self.__msg_fields(msg_id) for msg_id in msg_ids}
+        self.protocol_parser: Callable = protocol_parser
 
     @staticmethod
     def __msg_fields(msg_id: int) -> list:
@@ -44,6 +47,5 @@ class MavlinkDialectStructure:
             length += self.field_lengths[field]
         return length
 
-
-dialect_meta = MavlinkDialectStructure(STX, header_length, crc_length, msg_ids,
-                                       field_lengths)
+mav_obj = dialect.MAVLink(1)
+dialect_meta = MavlinkDialectMeta(STX, header_length, crc_length, msg_ids, field_lengths, mav_obj.decode)
