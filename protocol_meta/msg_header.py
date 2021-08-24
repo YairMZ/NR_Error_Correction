@@ -19,11 +19,12 @@ def is_valid_header(buffer: bytes) -> bool:
            meta.msgs_length.get(buffer[5]) == buffer[1]
 
 
-def hamming_distance_2_valid_header(buffer: bytes) -> tuple:
+def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple:
     """
     The function calculates the Hamming distance to the closest valid header.
 
-    :param buffer:
+    :param buffer: buffer containing supposed header.
+    :param max_len: if the maximal length is apriori (such as for instance limited by buffer length), it can be sent to ignore messages too long. The length sent should be that of the payload.
     :return: a tuple of (min_dist, chosen_msg_id) where chosen_msg_id the closest msg id with respect to valid headers, and min_dist is the minimal Hamming distance found.
     """
     if len(buffer) != meta.header_len:
@@ -38,8 +39,12 @@ def hamming_distance_2_valid_header(buffer: bytes) -> tuple:
         candidate_dist = bitstring.Bits(uint=msg_len ^ buffer[1], length=8).count(True) + \
                          bitstring.Bits(uint=msg_id ^ buffer[5], length=8).count(True)
         if candidate_dist < min_dist:
-            min_dist = candidate_dist
-            chosen_msg_id = msg_id
+            if max_len is None:  # No knowledge regarding max length
+                min_dist = candidate_dist
+                chosen_msg_id = msg_id
+            elif msg_len <= max_len:
+                min_dist = candidate_dist
+                chosen_msg_id = msg_id
         if candidate_dist == 0:
             break
 
@@ -94,8 +99,16 @@ class FrameHeader:
         return str(self.buffer)
 
     @classmethod
-    def from_buffer(cls, buffer: bytes):
+    def from_buffer(cls, buffer: bytes, force_msg_id: int = None):
+        """
+        construct  aframe header from a buffer
+        :param buffer: buffer of appropriate length
+        :param force_msg_id: if send the value will be forced as the msg id, ignoring the buffer (for reconstruction)
+        :return:
+        """
         if len(buffer) != meta.header_len:
             raise ValueError("incorrect header length of {}".format(len(buffer)))
         seq, sys_id, comp_id, msg_id = tuple(b for b in buffer[2:])
+        if force_msg_id is not None:
+            msg_id = force_msg_id
         return cls(msg_id, sys_id, comp_id, seq)

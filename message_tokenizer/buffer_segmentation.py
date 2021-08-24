@@ -1,5 +1,8 @@
 from __future__ import annotations
 from enum import Enum
+
+import bitstring
+
 from senders import KnownSender
 from protocol_meta import dialect_meta as meta
 from protocol_meta import hamming_distance_2_valid_header, FrameHeader, is_valid_header, MAVError
@@ -7,6 +10,7 @@ from typing import Callable
 from array import array
 import numpy as np
 from typing import Union
+from utils.bit_operations import hamming_distance
 
 
 class MsgParts(Enum):
@@ -44,6 +48,10 @@ class BufferStructure:
 
     def __str__(self) -> str:
         return str(self.structure)
+
+    def __len__(self):
+        """returns the number of messages in structures"""
+        return len(self.structure)
 
 
 class BufferSegmentation:
@@ -158,12 +166,37 @@ class BufferSegmentation:
             received_structure = self.register_structure(structure, buffer)
             return msg_parts, bit_validity, received_structure.structure
 
-        for bit_flips in range(max_flips + 1):
-            for byte_idx in range(len(buffer) - meta.header_len + 1):
+        # locate bad parts of buffer, break down to sub buffers
+        bad_buffer_parts = []
+        for byte_idx in range(len(buffer)):
+            if msg_parts[byte_idx] == MsgParts.UNKNOWN:
+                if not bad_buffer_parts:  # first bad byte case
+                    bad_buffer_parts = [{byte_idx: buffer[byte_idx]}]
+                elif msg_parts[byte_idx-1] == MsgParts.UNKNOWN:  # was the previous byte also bad?
+                    bad_buffer_parts[-1][byte_idx] = buffer[byte_idx]
+                else:  # new bad sector
+                    bad_buffer_parts.append({byte_idx: buffer[byte_idx]})
+
+        for sub_buffer in bad_buffer_parts:
+            bad_buffer = bytes(sub_buffer.values())
+            for byte_idx in range(len(bad_buffer) - meta.header_len + 1):
                 # look for valid headers with specified bit flips
-                if msg_parts[byte_idx] != MsgParts.UNKNOWN:
-                    continue
-                min_dist, chosen_msg_id = hamming_distance_2_valid_header(buffer[byte_idx:byte_idx + meta.header_len])
+                min_dist, chosen_msg_id = hamming_distance_2_valid_header(
+                    bad_buffer[byte_idx:byte_idx + meta.header_len],
+                    max_len=len(bad_buffer) - meta.protocol_overhead - byte_idx)
+                if min_dist <= max_flips:  # found candidate header
+                    allowed_flips = max_flips - min_dist
+                    # there's a bug somewhere in code below
+                    candidate_hdr = FrameHeader.from_buffer(bad_buffer[byte_idx:byte_idx + meta.header_len],
+                                                            force_msg_id=chosen_msg_id)
+                    if allowed_flips <= max_flips:
+                        print("corrected {} error bits in header".format(max_flips-allowed_flips))
+                        print("original header: ", bad_buffer[byte_idx:byte_idx + meta.header_len])
+                        print("corrected header: ", candidate_hdr.buffer)
+                        a = bitstring.Bits(auto=bad_buffer[byte_idx:byte_idx + meta.header_len])
+                        b = bitstring.Bits(auto=candidate_hdr.buffer)
+                        print(hamming_distance(a,b))
+                        pass
 
 
 if __name__ == "__main__":
@@ -191,6 +224,5 @@ if __name__ == "__main__":
         if MsgParts.HEADER in parts and ship_rx["rx_success"][idx] == 0:  # if found at least one good message
             interesting_buffers.append(idx)
             print(len(structure_), " good messages")
-            pass
             bs.reconstruct_buffer(buffer, 2, validity, parts, structure_)
     print(len(interesting_buffers), " bad buffers with some good messages")
