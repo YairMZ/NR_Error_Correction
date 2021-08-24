@@ -22,22 +22,27 @@ class BufferStructure:
         """
         :param msgs: a dict, keys are indices of start of frame within buffer, values are msg ids.
         """
-        self.structure = msgs
-        self.reception_count = 0
+        self.structure: dict = msgs
+        self.reception_count: int = 0
         self.received_buffers: list[bytes] = []
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, BufferStructure):
             return self.structure == other.structure
         if isinstance(other, dict):
             return self.structure == other
         return False
 
-    def register_buffer(self, buffer: bytes):
+    def register_buffer(self, buffer: bytes) -> None:
+        """
+        add a received buffer to list of buffers
+
+        :param buffer: whole buffer containing also payload
+        """
         self.received_buffers.append(buffer)
         self.reception_count += 1
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.structure)
 
 
@@ -59,9 +64,8 @@ class BufferSegmentation:
         """
         Break down a buffer to several MAVLink messages. Don't attempt ant reconstruction yet.
 
-
         :param buffer: a buffer containing one or more MAVLink msgs
-        :return: a tuple. The first element is a np.array of predicted message parts. The second is an np array of bit validity. The third is a dict with keys as indices of start of frame within buffer, values predicted msg ids.
+        :return: a tuple. The first element is a np.array of predicted message parts. The second is an np array of bit validity. The third is a BufferStructure object.
         """
 
         msg_parts = np.array([MsgParts.UNKNOWN]*len(buffer))  # Holds an enum value per bytes of the message.
@@ -91,10 +95,7 @@ class BufferSegmentation:
                     bit_validity[byte_idx*8: (byte_idx+len(candidate_buffer))*8] = 1
 
                     # register sender and message
-                    if header.sys_id not in self.known_senders:
-                        self.known_senders[header.sys_id] = KnownSender(header.sys_id)
-                    self.known_senders.get(header.sys_id).register_msg(
-                        header.comp_id, header.msg_id, buffer[byte_idx:byte_idx+header.length+meta.protocol_overhead])
+                    self.register_msg_2_sender(header, bytes(candidate_buffer))
 
                     # register structure
                     buffer_structure[byte_idx] = header.msg_id
@@ -106,12 +107,39 @@ class BufferSegmentation:
                 #     print(candidate_buffer)
 
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
-            received_structure = self.register_structure(buffer_structure)
-            return msg_parts, bit_validity, received_structure.structure
+            received_structure = self.register_structure(buffer_structure, buffer)
+            return msg_parts, bit_validity, received_structure
         else:  # buffer contains errors
             received_structure = BufferStructure(buffer_structure)
             received_structure.register_buffer(buffer)
-            return msg_parts, bit_validity, received_structure.structure
+            return msg_parts, bit_validity, received_structure
+
+    def register_msg_2_sender(self, header: FrameHeader, msg_buffer: bytes):
+        if header.sys_id not in self.known_senders:  # if this is a new sender
+            self.known_senders[header.sys_id] = KnownSender(header.sys_id)
+        self.known_senders.get(header.sys_id).register_msg(header.comp_id, header.msg_id, msg_buffer)
+
+    def register_structure(self, buffer_structure: Union[dict, BufferStructure], buffer: bytes) -> BufferStructure:
+        if isinstance(buffer_structure, BufferStructure) and not buffer_structure.structure:
+            raise ValueError("can't register an empty structure")
+        if isinstance(buffer_structure, dict) and not buffer_structure:
+            raise ValueError("can't register an empty structure")
+
+        received_structure = None
+        for structure in self.known_structures:
+            if structure == buffer_structure:
+                received_structure = structure
+                break
+        if received_structure is None:  # new kind of structure
+            if isinstance(buffer_structure, BufferStructure):
+                received_structure = buffer_structure
+            else:
+                received_structure = BufferStructure(buffer_structure)
+            self.known_structures.append(received_structure)
+
+        received_structure.register_buffer(buffer)
+
+        return received_structure
 
     def reconstruct_buffer(self, buffer: bytes, max_flips: int, bit_validity: np.array = None,
                            msg_parts: np.array = None, structure: Union[dict, BufferStructure] = None):
@@ -127,7 +155,7 @@ class BufferSegmentation:
         :return:
         """
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
-            received_structure = self.register_structure(structure)
+            received_structure = self.register_structure(structure, buffer)
             return msg_parts, bit_validity, received_structure.structure
 
         for bit_flips in range(max_flips + 1):
@@ -137,29 +165,9 @@ class BufferSegmentation:
                     continue
                 min_dist, chosen_msg_id = hamming_distance_2_valid_header(buffer[byte_idx:byte_idx + meta.header_len])
 
-    def register_structure(self, buffer_structure: Union[dict, BufferStructure]) -> BufferStructure:
-        if buffer_structure is None:
-            raise ValueError("can't register an unknown structure")
-
-        received_structure = None
-        for structure in self.known_structures:
-            if structure == buffer_structure:
-                structure.register_buffer(buffer)
-                received_structure = structure
-                break
-        if received_structure is None:  # new type of structure
-            if isinstance(buffer_structure, BufferStructure):
-                received_structure = buffer_structure
-            else:
-                received_structure = BufferStructure(buffer_structure)
-            received_structure.register_buffer(buffer)
-            self.known_structures.append(received_structure)
-        return received_structure
-
 
 if __name__ == "__main__":
     import pickle
-    import data_generation.mavlink_utils.clustering_dialect as dialect
     with open('../data/June_20_Rafael/hc_to_ship.pickle', 'rb') as f:
         ship_rx = pickle.load(f)
 
@@ -173,22 +181,16 @@ if __name__ == "__main__":
 
     all_transmissions = [bytes(tx) for tx in ship_rx["encoded_rx"]]
 
-    mav_obj = dialect.MAVLink(1)
-
-    bad_buffer = bytes([int(b) for b in ship_rx["encoded_rx"][3]])
-    # test_buffer = array('B', good_transmissions[0][:27])
-    # msg = mav_obj.decode(test_buffer)
-    # msg = mav_obj.parse_buffer(good_transmissions[0])
-    bs = BufferSegmentation(meta.msgs_length, mav_obj.decode)
-    for buffer in good_transmissions:
-        parts, validity, structure_ = bs.parse_buffer(buffer)
+    bs = BufferSegmentation(meta.msgs_length, meta.protocol_parser)
+    # for buffer in good_transmissions:
+    #     parts, validity, structure_ = bs.parse_buffer(buffer)
 
     interesting_buffers = []
-    for idx, buffer in enumerate(bad_transmissions):
+    for idx, buffer in enumerate(all_transmissions):
         parts, validity, structure_ = bs.parse_buffer(buffer)
-        if MsgParts.HEADER in parts and MsgParts.UNKNOWN in parts:  # if found at least one good message
+        if MsgParts.HEADER in parts and ship_rx["rx_success"][idx] == 0:  # if found at least one good message
             interesting_buffers.append(idx)
             print(len(structure_), " good messages")
             pass
-        bs.reconstruct_buffer(buffer, 2, validity, parts, structure_)
+            bs.reconstruct_buffer(buffer, 2, validity, parts, structure_)
     print(len(interesting_buffers), " bad buffers with some good messages")
