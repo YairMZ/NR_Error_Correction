@@ -21,7 +21,7 @@ def is_valid_header(buffer: bytes) -> bool:
 
 def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple:
     """
-    The function calculates the Hamming distance to the closest valid header.
+    The function calculates the Hamming distance to the closest valid header. A valid header starts with magic marker, and has valid msg_id and corresponding length
 
     :param buffer: buffer containing supposed header.
     :param max_len: if the maximal length is apriori (such as for instance limited by buffer length), it can be sent to ignore messages too long. The length sent should be that of the payload.
@@ -49,7 +49,7 @@ def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple
             break
 
     dist += min_dist
-    return min_dist, chosen_msg_id
+    return dist, chosen_msg_id
 
 
 class FrameHeader:
