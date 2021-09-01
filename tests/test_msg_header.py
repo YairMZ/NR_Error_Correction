@@ -3,16 +3,7 @@ from protocol_meta.protocol_meta import dialect_meta as meta
 from protocol_meta.msg_header import hamming_distance_2_valid_header, FrameHeader, is_valid_header, HeaderLength, NonExistentMsdId
 from utils.custom_exceptions import NonUint8
 from utils.bit_operations import hamming_distance
-import random
-import bitstring
-
-
-def rand_uint8():
-    return random.randint(0, 255)
-
-
-def rand_msg():
-    return random.choice(meta.msg_ids)
+from random_test_data_generation import rand_msg, rand_uint8
 
 
 class TestFrameHeader(unittest.TestCase):
