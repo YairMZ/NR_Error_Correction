@@ -1,5 +1,14 @@
 from .protocol_meta import dialect_meta as meta
 import bitstring
+from utils.custom_exceptions import NonUint8
+
+
+class HeaderLength(Exception):
+    pass
+
+
+class NonExistentMsdId(Exception):
+    pass
 
 
 def is_valid_header(buffer: bytes) -> bool:
@@ -15,8 +24,7 @@ def is_valid_header(buffer: bytes) -> bool:
     # buffer[0] stx
     # buffer[5]  msg_id
     # buffer[1]  msg_len
-    return buffer[0] == meta.stx and buffer[5] in meta.msgs_length.keys() and \
-           meta.msgs_length.get(buffer[5]) == buffer[1]
+    return buffer[0] == meta.stx and buffer[5] in meta.msgs_length.keys() and meta.msgs_length.get(buffer[5]) == buffer[1]
 
 
 def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple:
@@ -28,8 +36,8 @@ def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple
     :return: a tuple of (min_dist, chosen_msg_id) where chosen_msg_id the closest msg id with respect to valid headers, and min_dist is the minimal Hamming distance found.
     """
     if len(buffer) != meta.header_len:
-        return None, None
-    dist = bitstring.Bits(uint=254 ^ buffer[0], length=8).count(True)  # distance from magic marker \xFE
+        raise HeaderLength("incorrect header length of {}".format(len(buffer)))
+    dist = bitstring.Bits(uint=meta.stx ^ buffer[0], length=8).count(True)  # distance from magic marker \xFE
 
     # find minimal distance from possible lengths and message ids
     min_dist = 17  # since we're comparing the Hamming distance of two byte pairs, hamming distance cannot exceed 16
@@ -57,7 +65,12 @@ class FrameHeader:
 
     def __init__(self, msg_id: int, sys_id: int, comp_id: int, seq: int):
         if msg_id not in meta.msgs_length.keys():
-            raise ValueError("msg_id {} does not exist".format(msg_id))
+            if msg_id < 0 or msg_id > 255:
+                raise NonUint8(msg_id)
+            else:
+                raise NonExistentMsdId("msg_id {} does not exist".format(msg_id))
+        if sys_id < 0 or comp_id < 0 or seq < 0 or sys_id > 255 or comp_id > 255 or seq > 255:
+            raise NonUint8("invalid input, msg_id: {}, comp_id: {}, seq: {}".format(msg_id, comp_id, seq))
         length: int = meta.msgs_length.get(msg_id)
 
         self.buffer: bytes = bytes([meta.stx, length, seq, sys_id, comp_id, msg_id])
@@ -87,9 +100,8 @@ class FrameHeader:
         return bitstring.Bits(bytes=self.buffer)
 
     def hamming_distance(self, some_buffer: bytes) -> int:
-        if len(some_buffer) != meta.header_length:
-            raise ValueError("incorrect header length of {}".format(len(some_buffer)))
-        # noinspection PyRedundantParentheses
+        if len(some_buffer) != meta.header_len:
+            raise HeaderLength("incorrect header length of {}".format(len(some_buffer)))
         return ((self.bit_string) ^ bitstring.Bits(bytes=some_buffer)).count(True)
 
     def __str__(self):
