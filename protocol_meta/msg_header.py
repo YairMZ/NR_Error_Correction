@@ -1,6 +1,7 @@
 from .protocol_meta import dialect_meta as meta
 import bitstring
 from utils.custom_exceptions import NonUint8
+from utils.bit_operations import hamming_distance
 
 
 class HeaderLength(Exception):
@@ -37,15 +38,14 @@ def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple
     """
     if len(buffer) != meta.header_len:
         raise HeaderLength("incorrect header length of {}".format(len(buffer)))
-    dist = bitstring.Bits(uint=meta.stx ^ buffer[0], length=8).count(True)  # distance from magic marker \xFE
+    dist = hamming_distance(meta.stx, buffer[0])  # distance from magic marker \xFE
 
     # find minimal distance from possible lengths and message ids
     min_dist = 17  # since we're comparing the Hamming distance of two byte pairs, hamming distance cannot exceed 16
     chosen_msg_id = None
 
     for msg_id, msg_len in meta.msgs_length.items():
-        candidate_dist = bitstring.Bits(uint=msg_len ^ buffer[1], length=8).count(True) + \
-                         bitstring.Bits(uint=msg_id ^ buffer[5], length=8).count(True)
+        candidate_dist = hamming_distance(msg_len, buffer[1]) + hamming_distance(msg_id, buffer[5])
         if candidate_dist < min_dist:
             if max_len is None:  # No knowledge regarding max length
                 min_dist = candidate_dist
@@ -102,7 +102,7 @@ class FrameHeader:
     def hamming_distance(self, some_buffer: bytes) -> int:
         if len(some_buffer) != meta.header_len:
             raise HeaderLength("incorrect header length of {}".format(len(some_buffer)))
-        return ((self.bit_string) ^ bitstring.Bits(bytes=some_buffer)).count(True)
+        return hamming_distance(self.buffer, some_buffer)
 
     def __str__(self):
         "sys_id " + str(self.sys_id) + ", msg_id " + str(self.msg_id)
@@ -119,7 +119,7 @@ class FrameHeader:
         :return:
         """
         if len(buffer) != meta.header_len:
-            raise ValueError("incorrect header length of {}".format(len(buffer)))
+            raise HeaderLength("incorrect header length of {}".format(len(buffer)))
         seq, sys_id, comp_id, msg_id = tuple(b for b in buffer[2:])
         if force_msg_id is not None:
             msg_id = force_msg_id
