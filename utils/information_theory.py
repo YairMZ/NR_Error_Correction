@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import entropy as ent
+from typing import Union
 
 
 def prob(data: np.ndarray, alphabet_size=None) -> np.ndarray:
@@ -18,11 +19,17 @@ def prob(data: np.ndarray, alphabet_size=None) -> np.ndarray:
     if data.ndim == 1:
         num_samples = data.shape[0]
         return np.bincount(data, minlength=alphabet_size)/num_samples
-    raise ValueError("only scalar and vector RV's currently supported")
+    raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
 
 
-def entropy(pk: np.ndarray, base: int = 2):
+def entropy(pk: np.ndarray, base: int = 2) -> Union[np.ndarray, np.float]:
+    """This is a wrapper around scipy's entropy function. Seamlessly treat 1d and 2d arrays.
+
+    :param pk: an array representing a PMF. number of columns is alphabet size, and number of rows is number of RV's.
+    :param base: base of logarithm for entropy calculation. Defaults to 2 (entropy in units of bits).
+    """
     if pk.ndim == 2:
         return ent(pk, base=base, axis=1)
-    else:
+    if pk.ndim == 1:
         return ent(pk, base=base)
+    raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
