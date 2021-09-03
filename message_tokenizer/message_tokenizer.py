@@ -1,5 +1,5 @@
 from __future__ import annotations
-from senders import KnownSender
+from .senders import KnownSender
 
 
 class Tokenizer:
