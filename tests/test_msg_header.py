@@ -1,9 +1,10 @@
 import unittest
 from protocol_meta.protocol_meta import dialect_meta as meta
-from protocol_meta.msg_header import hamming_distance_2_valid_header, FrameHeader, is_valid_header, HeaderLength, NonExistentMsdId
+from protocol_meta.msg_header import hamming_distance_2_valid_header, FrameHeader, is_valid_header, HeaderLength, \
+    NonExistentMsdId
 from utils.custom_exceptions import NonUint8
 from utils.bit_operations import hamming_distance
-from random_test_data_generation import rand_msg, rand_uint8
+from tests.random_test_data_generation import rand_msg, rand_uint8
 
 
 class TestFrameHeader(unittest.TestCase):
@@ -104,7 +105,6 @@ class TestDistanceToValidHeader(unittest.TestCase):
             buffer = frame.buffer
             corrupted_msg = rand_msg()
             corrupted_buffer = buffer[:5] + bytes([corrupted_msg])
-            corrupted_frame = FrameHeader.from_buffer(corrupted_buffer)
 
             dist_to_origin = hamming_distance(buffer, corrupted_buffer)  # originates from msg_id
             dist, chosen_msg = hamming_distance_2_valid_header(corrupted_buffer)
@@ -122,7 +122,6 @@ class TestDistanceToValidHeader(unittest.TestCase):
             buffer = frame.buffer
             corrupted_len = rand_uint8()
             corrupted_buffer = bytes([buffer[0], corrupted_len]) + buffer[2:]
-            corrupted_frame = FrameHeader.from_buffer(corrupted_buffer)
 
             dist_to_origin = hamming_distance(buffer, corrupted_buffer)  # originates from len
             dist, chosen_msg = hamming_distance_2_valid_header(corrupted_buffer)
@@ -140,10 +139,10 @@ class TestDistanceToValidHeader(unittest.TestCase):
             buffer = frame.buffer
             corrupted_stx = rand_uint8()
             corrupted_buffer = bytes([corrupted_stx]) + buffer[1:]
-            corrupted_frame = FrameHeader.from_buffer(corrupted_buffer)
 
             dist_to_origin = hamming_distance(buffer, corrupted_buffer)  # originates from stx
-            dist, chosen_msg = hamming_distance_2_valid_header(corrupted_buffer)  # chosen message should be the same as original
+            dist, chosen_msg = hamming_distance_2_valid_header(corrupted_buffer)  # chosen message should be the same as
+            # original
 
             chosen_frame = FrameHeader(chosen_msg, frame.sys_id, frame.comp_id, frame.sequence)
             dist_chosen = chosen_frame.hamming_distance(
