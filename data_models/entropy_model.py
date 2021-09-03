@@ -1,3 +1,6 @@
+"""
+Model which inheres structure bits based on entropy of previous buffers of assumed similar structure
+"""
 from .data_model import DataModel, ModelType
 from utils.custom_exceptions import IncorrectBufferLength
 import numpy as np
@@ -23,7 +26,7 @@ class EntropyModel(DataModel):
 
     def update_model(self, new_data: bytes, **kwargs) -> None:
         """The method is responsible to update the model based on new observations.
-        :param data: observation used to refine model
+        :param new_data: observation used to refine model
         :param kwargs: all other arguments which the model may require for the update
         """
         if len(new_data) != self.buffer_length:
