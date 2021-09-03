@@ -1,6 +1,6 @@
 import random
 
-import bitstring
+import bitstring  # type: ignore
 
 from protocol_meta.protocol_meta import dialect_meta as meta
 
@@ -14,6 +14,6 @@ def rand_msg():
 
 
 def rand_bitstring(n):
-    l = [random.randint(0, 1) for _ in range(n)]
-    s = "".join(map(str, l))
+    ls = [random.randint(0, 1) for _ in range(n)]
+    s = "".join(map(str, ls))
     return bitstring.Bits(bin=s)

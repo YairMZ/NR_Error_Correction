@@ -1,5 +1,5 @@
 import unittest
-import bitstring
+import bitstring  # type: ignore
 from random_test_data_generation import rand_uint8, rand_bitstring
 from utils.bit_operations import hamming_distance
 import random

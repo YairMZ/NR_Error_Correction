@@ -1,3 +1,4 @@
+"""class for holding known senders, and information regarding them"""
 from __future__ import annotations
 
 

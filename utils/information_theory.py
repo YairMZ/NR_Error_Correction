@@ -1,5 +1,6 @@
+"""various statistical functions, information theory measures, and convenience wrappers around scipy"""
 import numpy as np
-from scipy.stats import entropy as ent
+from scipy.stats import entropy as ent  # type: ignore
 from typing import Union
 
 
@@ -22,7 +23,7 @@ def prob(data: np.ndarray, alphabet_size=None) -> np.ndarray:
     raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
 
 
-def entropy(pk: np.ndarray, base: int = 2) -> Union[np.ndarray, np.float]:
+def entropy(pk: np.ndarray, base: int = 2) -> Union[np.ndarray, float]:
     """This is a wrapper around scipy's entropy function. Seamlessly treat 1d and 2d arrays.
 
     :param pk: an array representing a PMF. number of columns is alphabet size, and number of rows is number of RV's.

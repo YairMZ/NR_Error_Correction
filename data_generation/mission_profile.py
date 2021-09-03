@@ -1,6 +1,6 @@
 import mavlink_utils.clustering_dialect as mav
 import numpy as np
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore
 # import plotly.io as pio
 
 # pio.renderers.default = "svg"   #to render graphs in pycharm and not browser
@@ -81,6 +81,6 @@ water_temp_noise = np.concatenate((0.4*np.ones(60), 0.15*np.ones(420), 0.3*np.on
 water_temp = 5+25*np.exp(-depth/200) + water_temp_noise
 depth = depth + depth_noise
 pressure = 101.325+1025*9.81*depth/1000
-Speed_of_Sound = c_water(water_temp, pressure, 40);
+# Speed_of_Sound = c_water(water_temp, pressure, 40);
 # figure(3)
 # plot(Speed_of_Sound)

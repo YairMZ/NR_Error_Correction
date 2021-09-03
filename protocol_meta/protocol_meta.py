@@ -1,4 +1,5 @@
-import data_generation.mavlink_utils.clustering_dialect as dialect
+"""meta data of specific mavlink dialect"""
+import data_generation.mavlink_utils.clustering_dialect as dialect  # type: ignore
 from data_generation.mavlink_utils.clustering_dialect import MAVError  # expose class directly to whomever imports meta
 from typing import Callable
 
@@ -35,7 +36,7 @@ class MavlinkDialectMeta:
             dialect.mavlink_map.get(msg_id).fieldnames[i]: dialect.mavlink_map.get(msg_id).fieldtypes[i]
             for i in range(num_of_fields)}
         ordered_fieldnames = dialect.mavlink_map.get(msg_id).ordered_fieldnames
-        fields = [None] * num_of_fields
+        fields: list = [None] * num_of_fields
         for i in range(num_of_fields):
             fields[i] = (ordered_fieldnames[i], unordered_fieldnames.get(ordered_fieldnames[i]))
         return fields
@@ -46,6 +47,7 @@ class MavlinkDialectMeta:
         for field in field_types:
             length += self.field_lengths[field]
         return length
+
 
 mav_obj = dialect.MAVLink(1)
 dialect_meta = MavlinkDialectMeta(STX, header_length, crc_length, msg_ids, field_lengths, mav_obj.decode)

@@ -1,3 +1,6 @@
+"""My custom exceptions used throughout the project"""
+
+
 class NonUint8(Exception):
     """Exception is raised if a function is given an  incompatible int argument where an uint8 is expected."""
     def __init__(self, *args):
@@ -11,3 +14,8 @@ class NonUint8(Exception):
         else:
             self.message = "Value is not uint8"
         super().__init__(self.message)
+
+
+class IncorrectBufferLength(ValueError):
+    """Raised when a buffer doesn't meet the expected length"""
+    pass
