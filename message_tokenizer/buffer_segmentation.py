@@ -1,9 +1,8 @@
+"""break down a buffer to good and bad parts. Classify buffer parts according to protocol meta data"""
 from __future__ import annotations
 from enum import Enum
-
-import bitstring
-
-from senders import KnownSender
+import bitstring  # type: ignore
+from .senders import KnownSender
 from protocol_meta import dialect_meta as meta
 from protocol_meta import hamming_distance_2_valid_header, FrameHeader, is_valid_header, MAVError
 from typing import Callable
@@ -12,8 +11,9 @@ import numpy as np
 from typing import Union
 from utils.bit_operations import hamming_distance
 
-
+valid_headers = 0
 class MsgParts(Enum):
+    """various types of message parts per protocol meta"""
     HEADER = 0
     PAYLOAD = 1
     CHECKSUM = 2
@@ -68,12 +68,13 @@ class BufferSegmentation:
         self.protocol_parser = protocol_parser_handler
 
     def parse_buffer(self, buffer: bytes) -> tuple:
-        # noinspection LongLine
         """
-        Break down a buffer to several MAVLink messages. Don't attempt ant reconstruction yet.
+        Breaks down a buffer to several MAVLink messages. Doesn't attempt any 
+        reconstruction, only break down to good and bad parts.
 
         :param buffer: a buffer containing one or more MAVLink msgs
-        :return: a tuple. The first element is a np.array of predicted message parts. The second is an np array of bit validity. The third is a BufferStructure object.
+        :return: a tuple. The first element is a np.ndarray of predicted message parts. The second is an np.ndarray of
+        bit validity. The third is a BufferStructure object.
         """
 
         msg_parts = np.array([MsgParts.UNKNOWN]*len(buffer))  # Holds an enum value per bytes of the message.
@@ -123,11 +124,15 @@ class BufferSegmentation:
             return msg_parts, bit_validity, received_structure
 
     def register_msg_2_sender(self, header: FrameHeader, msg_buffer: bytes):
+        """add a message to message known to be sent by sender"""
         if header.sys_id not in self.known_senders:  # if this is a new sender
             self.known_senders[header.sys_id] = KnownSender(header.sys_id)
-        self.known_senders.get(header.sys_id).register_msg(header.comp_id, header.msg_id, msg_buffer)
+        sender = self.known_senders.get(header.sys_id)
+        if isinstance(sender, KnownSender):
+            sender.register_msg(header.comp_id, header.msg_id, msg_buffer)
 
     def register_structure(self, buffer_structure: Union[dict, BufferStructure], buffer: bytes) -> BufferStructure:
+        """add a buffer structure to known received buffer structures."""
         if isinstance(buffer_structure, BufferStructure) and not buffer_structure.structure:
             raise ValueError("can't register an empty structure")
         if isinstance(buffer_structure, dict) and not buffer_structure:
@@ -149,25 +154,29 @@ class BufferSegmentation:
 
         return received_structure
 
-    def reconstruct_buffer(self, buffer: bytes, max_flips: int, bit_validity: np.array = None,
-                           msg_parts: np.array = None, structure: Union[dict, BufferStructure] = None):
+    def reconstruct_buffer(self, buffer: bytes, max_flips: int, bit_validity: np.ndarray, msg_parts: np.ndarray,
+                           structure: Union[dict, BufferStructure] = None):
         """
 
         :param buffer: a buffer containing one or more MAVLink msgs
         :param max_flips: maximal number of bit flips allowed per header to count as a valid header
-        :param bit_validity: an np.array with single value per bit. This tells how certain are we of the correctness of
-        bit value. 1 is correct, -1 is incorrect, and 0 is unknown. Defaults to None if unknown.
-        :param msg_parts: an np.array which holds an enum value per bytes of the message, which tells how was it
-        classified. Defaults to None if unknown.
+        :param bit_validity: an np.ndarray with single value per bit. This tells how certain are we of the correctness
+        of bit value. 1 is correct, -1 is incorrect, and 0 is unknown
+        :param msg_parts: an np.ndarray which holds an enum value per bytes of the message, which tells how was it
+        classified.
         :param structure: buffer structure if known, else defaults to None
         :return:
         """
+        global valid_headers
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
-            received_structure = self.register_structure(structure, buffer)
+            if isinstance(structure, dict) or isinstance(structure, BufferStructure):
+                received_structure = self.register_structure(structure, buffer)
+            else:
+                raise ValueError("No structure given for a fully parsed buffer")
             return msg_parts, bit_validity, received_structure.structure
 
         # locate bad parts of buffer, break down to sub buffers
-        bad_buffer_parts = []
+        bad_buffer_parts: list[dict[int, int]] = []
         for byte_idx in range(len(buffer)):
             if msg_parts[byte_idx] == MsgParts.UNKNOWN:
                 if not bad_buffer_parts:  # first bad byte case
@@ -189,40 +198,15 @@ class BufferSegmentation:
                     # there's a bug somewhere in code below
                     candidate_hdr = FrameHeader.from_buffer(bad_buffer[byte_idx:byte_idx + meta.header_len],
                                                             force_msg_id=chosen_msg_id)
-                    if allowed_flips <= max_flips:
-                        print("corrected {} error bits in header".format(max_flips-allowed_flips))
+                    if min_dist == 0:
+                        valid_headers += 1
+                    if min_dist > 0:
+                        print("corrected {} error bits in header".format(min_dist))
                         print("original header: ", bad_buffer[byte_idx:byte_idx + meta.header_len])
                         print("corrected header: ", candidate_hdr.buffer)
                         a = bitstring.Bits(auto=bad_buffer[byte_idx:byte_idx + meta.header_len])
                         b = bitstring.Bits(auto=candidate_hdr.buffer)
-                        print(hamming_distance(a,b))
-                        pass
-
-
-if __name__ == "__main__":
-    import pickle
-    with open('../data/June_20_Rafael/hc_to_ship.pickle', 'rb') as f:
-        ship_rx = pickle.load(f)
-
-    good_transmissions = [buffer for is_success, buffer in zip(ship_rx["rx_success"], ship_rx["encoded_rx"])
-                          if is_success == 1]
-    good_transmissions = [bytes(tx) for tx in good_transmissions]
-
-    bad_transmissions = [buffer for is_success, buffer in zip(ship_rx["rx_success"], ship_rx["encoded_rx"])
-                         if is_success == 0]
-    bad_transmissions = [bytes(tx) for tx in bad_transmissions]
-
-    all_transmissions = [bytes(tx) for tx in ship_rx["encoded_rx"]]
-
-    bs = BufferSegmentation(meta.msgs_length, meta.protocol_parser)
-    # for buffer in good_transmissions:
-    #     parts, validity, structure_ = bs.parse_buffer(buffer)
-
-    interesting_buffers = []
-    for idx, buffer in enumerate(all_transmissions):
-        parts, validity, structure_ = bs.parse_buffer(buffer)
-        if MsgParts.HEADER in parts and ship_rx["rx_success"][idx] == 0:  # if found at least one good message
-            interesting_buffers.append(idx)
-            print(len(structure_), " good messages")
-            bs.reconstruct_buffer(buffer, 2, validity, parts, structure_)
-    print(len(interesting_buffers), " bad buffers with some good messages")
+                        print(hamming_distance(a, b))
+                        if min_dist != hamming_distance(a, b):
+                            pass
+        return min_dist
