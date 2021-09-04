@@ -49,7 +49,7 @@ class TestFrameHeader(unittest.TestCase):
 
     def test_hamming(self):
         mask = 1
-        for i in range(0, 6):
+        for i in range(6):
             with self.subTest():
                 frame = FrameHeader(rand_msg(), rand_uint8(), rand_uint8(), rand_uint8())
                 buffer = frame.buffer

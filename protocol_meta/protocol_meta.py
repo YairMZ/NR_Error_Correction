@@ -43,10 +43,7 @@ class MavlinkDialectMeta:
 
     def __msg_len(self, msg_id: int) -> int:
         field_types = dialect.mavlink_map.get(msg_id).fieldtypes
-        length = 0
-        for field in field_types:
-            length += self.field_lengths[field]
-        return length
+        return sum(self.field_lengths[field] for field in field_types)
 
 
 mav_obj = dialect.MAVLink(1)
