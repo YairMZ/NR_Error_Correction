@@ -117,11 +117,10 @@ class BufferSegmentation:
 
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
             received_structure = self.register_structure(buffer_structure, buffer)
-            return msg_parts, bit_validity, received_structure
         else:  # buffer contains errors
             received_structure = BufferStructure(buffer_structure)
             received_structure.register_buffer(buffer)
-            return msg_parts, bit_validity, received_structure
+        return msg_parts, bit_validity, received_structure
 
     def register_msg_2_sender(self, header: FrameHeader, msg_buffer: bytes):
         """add a message to message known to be sent by sender"""
@@ -169,7 +168,7 @@ class BufferSegmentation:
         """
         global valid_headers
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
-            if isinstance(structure, dict) or isinstance(structure, BufferStructure):
+            if isinstance(structure, (dict, BufferStructure)):
                 received_structure = self.register_structure(structure, buffer)
             else:
                 raise ValueError("No structure given for a fully parsed buffer")

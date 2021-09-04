@@ -52,13 +52,9 @@ def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple
 
     for msg_id, msg_len in meta.msgs_length.items():
         candidate_dist = hamming_distance(msg_len, buffer[1]) + hamming_distance(msg_id, buffer[5])
-        if candidate_dist < min_dist:
-            if max_len is None:  # No knowledge regarding max length
-                min_dist = candidate_dist
-                chosen_msg_id = msg_id
-            elif msg_len <= max_len:
-                min_dist = candidate_dist
-                chosen_msg_id = msg_id
+        if candidate_dist < min_dist and (max_len is None or msg_len <= max_len):
+            min_dist = candidate_dist
+            chosen_msg_id = msg_id
         if candidate_dist == 0:
             break
 
@@ -74,11 +70,10 @@ class FrameHeader:
             raise NonUint8("invalid input, msg_id: {}, comp_id: {}, seq: {}".format(msg_id, comp_id, seq))
         if msg_id in meta.msgs_length.keys():
             length: int = meta.msgs_length.get(msg_id)
+        elif msg_id < 0 or msg_id > 255:
+            raise NonUint8(msg_id)
         else:
-            if msg_id < 0 or msg_id > 255:
-                raise NonUint8(msg_id)
-            else:
-                raise NonExistentMsdId("msg_id {} does not exist".format(msg_id))
+            raise NonExistentMsdId("msg_id {} does not exist".format(msg_id))
 
         self.buffer: bytes = bytes([meta.stx, length, seq, sys_id, comp_id, msg_id])
 
@@ -134,7 +129,7 @@ class FrameHeader:
         """
         if len(buffer) != meta.header_len:
             raise HeaderLength("incorrect header length of {}".format(len(buffer)))
-        seq, sys_id, comp_id, msg_id = tuple(b for b in buffer[2:])
+        seq, sys_id, comp_id, msg_id = tuple(buffer[2:])
         if force_msg_id is not None:
             msg_id = force_msg_id
         return cls(msg_id, sys_id, comp_id, seq)

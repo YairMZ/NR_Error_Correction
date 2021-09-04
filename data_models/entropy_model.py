@@ -34,10 +34,7 @@ class EntropyModel(DataModel):
         arr = np.array([np.frombuffer(new_data, dtype=np.uint8)]).T
         if self.bitwise:
             arr = np.unpackbits(arr, axis=0)
-        if self.data.size == 0:  # no data yet
-            self.data = arr
-        else:
-            self.data = np.append(self.data, arr, axis=1)
+        self.data = arr if self.data.size == 0 else np.append(self.data, arr, axis=1)
         self.distribution = prob(self.data)
         self.entropy = entropy()
 

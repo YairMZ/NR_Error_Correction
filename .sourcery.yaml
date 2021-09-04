@@ -1,0 +1,3 @@
+ignore: 
+  - data_generation/mission_profile.py
+  - data_generation/mavlink_utils/clustering_dialect.py
