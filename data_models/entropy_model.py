@@ -36,7 +36,7 @@ class EntropyModel(DataModel):
             arr = np.unpackbits(arr, axis=0)
         self.data = arr if self.data.size == 0 else np.append(self.data, arr, axis=1)
         self.distribution = prob(self.data)
-        self.entropy = entropy()
+        self.entropy = entropy(self.distribution)
 
     def predict(self, data: bytes, **kwargs):
         """Responsible for making predictions regarding originally sent data, based on recent observations and model.

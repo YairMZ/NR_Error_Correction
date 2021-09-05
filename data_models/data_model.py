@@ -19,7 +19,6 @@ class DataModel(ABC):
         :param new_data: observation used to refine model
         :param kwargs: all other arguments which the model may require for the update
         """
-        pass
 
     @abstractmethod
     def predict(self, data: bytes, **kwargs):
@@ -27,4 +26,3 @@ class DataModel(ABC):
         :param data: recent observation regrading which a prediction is required.
         :param kwargs: all other arguments which the model may require to make predictions.
         """
-        pass
