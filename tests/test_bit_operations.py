@@ -1,3 +1,4 @@
+import pytest
 import bitstring  # type: ignore
 from random_test_data_generation import rand_uint8, rand_bitstring
 from utils.bit_operations import hamming_distance
@@ -29,3 +30,9 @@ class TestHammingDistance:
         a = rand_uint8()
         b = bitstring.Bits(uint=a, length=8)
         assert hamming_distance(a, b) == 0
+
+    def test_wrong_types(self):
+        a = '0011 00'
+        b = bitstring.Bits(bin=a)
+        with pytest.raises(TypeError):
+            hamming_distance(a, b)

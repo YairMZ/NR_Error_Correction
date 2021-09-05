@@ -80,14 +80,18 @@ class TestIsValidHeader:
             buffer = buffer[:5] + bytes([possible_ids[0]])
             val = is_valid_header(buffer)
             assert val is False
-        else:
-            assert True
 
-    def test_wrong_length(self):
+    def test_wrong_msg_length(self):
         buffer = FrameHeader(rand_msg(), rand_uint8(), rand_uint8(), rand_uint8()).buffer
         buffer = bytes([buffer[0]]) + bytes([buffer[1] << 1]) + buffer[2:]
         val = is_valid_header(buffer)
         assert val is False
+
+    def test_wrong_buffer_length(self):
+        short_buffer = bytes(range(3))
+        assert is_valid_header(short_buffer) is False
+        long_buffer = bytes(range(10))
+        assert is_valid_header(long_buffer) is False
 
 
 class TestDistanceToValidHeader:
@@ -150,3 +154,11 @@ class TestDistanceToValidHeader:
             assert dist_chosen == dist
             assert dist == dist_to_origin
             assert chosen_msg == msg
+
+    def test_wrong_buffer_length(self):
+        short_buffer = bytes(range(3))
+        with pytest.raises(HeaderLength):
+            hamming_distance_2_valid_header(short_buffer)
+        long_buffer = bytes(range(10))
+        with pytest.raises(HeaderLength):
+            hamming_distance_2_valid_header(long_buffer)

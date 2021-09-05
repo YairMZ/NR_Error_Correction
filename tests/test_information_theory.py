@@ -28,6 +28,11 @@ class TestProbability:
         assert 0.2 == pytest.approx(min_val, abs=1e-3)
         assert 0.2 == pytest.approx(max_val, abs=1e-3)
 
+    def test_incompatible_dim(self):
+        data = np.array([[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
+        with pytest.raises(ValueError):
+            prob(data)
+
 
 class TestEntropy:
     def test_1d_array(self):
@@ -57,3 +62,8 @@ class TestEntropy:
         assert e[0] == pytest.approx(np.log2(9))
         assert e[1] == pytest.approx(np.log2(9))
         assert isinstance(e, np.ndarray)
+
+    def test_incompatible_dim(self):
+        data = np.array([[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
+        with pytest.raises(ValueError):
+            entropy(data)
