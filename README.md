@@ -1,3 +1,5 @@
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Build Status - GitHub](https://github.com/YairMZ/NR_Error_Correction/actions/workflows/python-app.yml/badge.svg)](https://github.com/YairMZ/NR_Error_Correction/actions/workflows/python-app.yml/badge.svg)
 # NR Error Correction
 Natural redundancy based error correction
 
