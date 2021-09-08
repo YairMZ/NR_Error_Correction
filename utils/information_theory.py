@@ -2,25 +2,45 @@
 import numpy as np
 from scipy.stats import entropy as ent  # type: ignore
 from typing import Union
+from .custom_exceptions import UnsupportedDtype   # type: ignore
 
 
-def prob(data: np.ndarray, alphabet_size=None) -> np.ndarray:
-    """Estimate the probability distribution given samples
+def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tuple[np.ndarray, list]]:
+    """Estimate the probability distribution given samples. Doesn't work with floating point values.
 
     :param data: a 1D or 2D numpy array. Each row is a dimension and each column an observation
-    :param alphabet_size: If left as None, inferred from data.
+    :param return_labels: if true, labels of frequencies are also returned. Tuple is returned instead of array.
     :return: a 2D array of of probabilities. Rows are RV dimension, and columns are alphabet size
     """
-    # TODO - add ability to return joint distribution
-    if alphabet_size is None:
-        alphabet_size = len(np.unique(data))
+    if data.dtype in [float, np.float64]:
+        raise UnsupportedDtype()
+    # TODO - add ability to return joint distribution - can be done with np.unique along axis
+
     if data.ndim == 2:
+        alphabet: list = (np.unique(data)).tolist()
+        alphabet_size = len(alphabet)
+        pr = np.zeros((data.shape[0], alphabet_size))
         num_samples = data.shape[1]
-        return np.apply_along_axis(lambda x: np.bincount(x, minlength=alphabet_size), axis=1, arr=data)/num_samples
-    if data.ndim == 1:
+        for row_idx, row in enumerate(data):
+            values, counts = np.unique(row, return_counts=True)
+            for val, count in zip(values, counts):
+                pr[row_idx][alphabet.index(val)] = count
+        pr = np.divide(pr, num_samples)
+        if return_labels:
+            return pr, alphabet
+        else:
+            return pr
+        # return np.apply_along_axis(lambda x: np.bincount(x, minlength=alphabet_size), axis=1, arr=data)/num_samples
+    elif data.ndim == 1:
         num_samples = data.shape[0]
-        return np.bincount(data, minlength=alphabet_size)/num_samples
-    raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
+        alphabet, pr = np.unique(data, return_counts=True)
+        pr = np.divide(pr, num_samples)
+        if return_labels:
+            return pr, alphabet.tolist()
+        else:
+            return pr
+    else:
+        raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
 
 
 def entropy(pk: np.ndarray, base: int = 2) -> Union[np.ndarray, float]:
