@@ -45,6 +45,14 @@ class TestProbability:
         p, alphabet = prob(data, return_labels=True)
         assert alphabet == data.flatten().tolist()
 
+    def test_return_alphabet(self):
+        data = np.array([[i for i in range(5, 11)], [i for i in range(15, 21)]])
+        p, alphabet = prob(data, return_labels=True)
+        assert alphabet == data.flatten().tolist()
+        p, alphabet = prob(data[0], return_labels=True)
+        t = data[0].tolist()
+        assert alphabet == data[0].tolist()
+
 
 class TestEntropy:
     def test_1d_array(self):

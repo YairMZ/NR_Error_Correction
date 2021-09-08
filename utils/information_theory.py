@@ -36,7 +36,7 @@ def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tup
         alphabet, pr = np.unique(data, return_counts=True)
         pr = np.divide(pr, num_samples)
         if return_labels:
-            return pr, alphabet
+            return pr, alphabet.tolist()
         else:
             return pr
     else:
