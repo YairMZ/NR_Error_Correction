@@ -10,11 +10,6 @@ class TestProbability:
         with pytest.raises(UnsupportedDtype):
             prob(data)
 
-    # def test_alphabet_size(self):
-    #     data = np.random.randint(10, size=(10, 10))
-    #     p = prob(data, 11)
-    #     assert 11 == p.shape[1]
-
     def test_multi_dimension(self):
         data = np.random.randint(10, size=(10, 10))
         p = prob(data)
