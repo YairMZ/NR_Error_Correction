@@ -1,13 +1,19 @@
 import pytest
 import numpy as np
 from utils.information_theory import prob, entropy
+from utils.custom_exceptions import UnsupportedDtype
 
 
 class TestProbability:
-    def test_alphabet_size(self):
-        data = np.random.randint(10, size=(10, 10))
-        p = prob(data, 11)
-        assert 11 == p.shape[1]
+    def test_unsupported_dtype(self):
+        data = np.array([1.1, 2.2])
+        with pytest.raises(UnsupportedDtype):
+            prob(data)
+
+    # def test_alphabet_size(self):
+    #     data = np.random.randint(10, size=(10, 10))
+    #     p = prob(data, 11)
+    #     assert 11 == p.shape[1]
 
     def test_multi_dimension(self):
         data = np.random.randint(10, size=(10, 10))
@@ -32,6 +38,12 @@ class TestProbability:
         data = np.array([[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
         with pytest.raises(ValueError):
             prob(data)
+
+    def test_gaps_in_alphabet_2d(self):
+        # Data contain "missing" integers in characters caused broadcast exception in 2d data.
+        data = np.array([[i for i in range(5, 11)], [i for i in range(15, 21)]])
+        p, alphabet = prob(data, return_labels=True)
+        assert alphabet == data.flatten().tolist()
 
 
 class TestEntropy:

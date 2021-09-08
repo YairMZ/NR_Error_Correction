@@ -13,3 +13,8 @@ class NonUint8(Exception):
 class IncorrectBufferLength(ValueError):
     """Raised when a buffer doesn't meet the expected length"""
     pass
+
+
+class UnsupportedDtype(Exception):
+    """Raised when a function receives an ndarray with supported dtype"""
+    pass
