@@ -71,3 +71,10 @@ class TestEntropyModel:
         prediction = model.predict(bad_data, entropy_threshold=1)
         assert prediction == data[1]
 
+    def test_finite_window(self):
+        data = [bytes(list(range(12)) + list(range(3 * i, 3 * i + 12))) for i in range(10)]
+        window_length = 5
+        model = EntropyModel(len(data[0]), bitwise=False, element_type="int32", window_length=window_length)
+        for datum in data:
+            model.update_model(datum)
+        assert model.data.shape[1] == window_length

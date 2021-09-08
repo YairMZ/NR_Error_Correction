@@ -24,7 +24,7 @@ class EntropyModel(DataModel):
         """
         :param buffer_length: buffer length in bytes
         :param bitwise: consider bitwise or bytewise elements
-        :param window_length: number of last messages to consider when evaluating distribution and means
+        :param window_length: number of last messages to consider when evaluating distribution and entropy
         :param element_type: a supported dtype: uint8, uint16, uint32, int8, int16, int32
         """
         if element_type not in self.alphabet_size_dict.keys():
@@ -52,7 +52,9 @@ class EntropyModel(DataModel):
         if self.bitwise:
             arr = np.unpackbits(arr, axis=0)
         self.data = arr if self.data.size == 0 else np.append(self.data, arr, axis=1)
-        # TODO: trim old messages according to window
+        if (self.window_length is not None) and self.data.shape[1] > self.window_length:
+            # trim old messages according to window
+            self.data = self.data[:, self.data.shape[1] - self.window_length:]
         self.distribution = prob(self.data)
         self.entropy = np.array(entropy(self.distribution))
 
