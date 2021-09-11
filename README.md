@@ -11,7 +11,11 @@ The protocol used to transmit the data also gives rise to additional redundancy.
 The code currently considers only the MAVLink protocol, commonly used for UAV's.
 
 To run tests simply clone, cd into the cloned repo, and run:
-
 ```
-python -m pytests
+python -m pytest
 ```
+or
+```
+python -m pytest --cov-report=html
+```
+to run also coverage tests.
