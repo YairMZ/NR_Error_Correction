@@ -1,6 +1,6 @@
 """various statistical functions, information theory measures, and convenience wrappers around scipy"""
 import numpy as np
-from scipy.stats import entropy as ent  # type: ignore
+from scipy.stats import entropy as scipy_ent  # type: ignore
 from typing import Union
 from .custom_exceptions import UnsupportedDtype   # type: ignore
 
@@ -48,9 +48,36 @@ def entropy(pk: np.ndarray, base: int = 2) -> Union[np.ndarray, float]:
 
     :param pk: an array representing a PMF. number of columns is alphabet size, and number of rows is number of RV's.
     :param base: base of logarithm for entropy calculation. Defaults to 2 (entropy in units of bits).
+    :rtype: Union[np.ndarray, float]
     """
     if pk.ndim == 2:
-        return ent(pk, base=base, axis=1)
+        return scipy_ent(pk, base=base, axis=1)
     if pk.ndim == 1:
-        return ent(pk, base=base)
+        return scipy_ent(pk, base=base)
     raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
+
+
+def typical_set_cardinality(n: int, pk: np.ndarray = None, ent: float = None, eps: float = 1e-5) -> tuple[float, float]:
+    # noinspection LongLine
+    """Given an distribution describing an i.i.d process, how many typical sequences of length n are there?
+
+    The cardinality of a typical set is dictated by the AEP. See:
+    https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-441-information-theory-spring-2010/lecture-notes/MIT6_441S10_lec03.pdf
+    :param n: The length of the sequence
+    :param pk: Defaults to None. If specified, a 1d array representing a PMF of a univariate RV.
+    :param ent: The entropy of the variable. Defaults to None, in which case it is inferred from distribution. If specified, it is used and pk is ignored
+    :param eps: The epsilon used for the calculation
+    :return: An tuple representing a lower and  upper bounds on the cardinality of the typical set of sequences of length n.
+    """
+    if n <= 0 or eps <= 0:
+        raise ValueError()
+    if ent is None:
+        if pk is None:
+            raise ValueError()
+        else:
+            ent = entropy(pk, base=2)
+    if not isinstance(ent, float):
+        raise ValueError()
+    ub = 2**(n * (ent + eps))
+    lb = (1 - eps) * 2**(n * (ent - eps))
+    return lb, ub
