@@ -76,7 +76,7 @@ def typical_set_cardinality(n: int, pk: np.ndarray = None, ent: float = None, ep
             raise ValueError()
         else:
             ent = entropy(pk, base=2)
-    if not isinstance(ent, float):
+    if not isinstance(ent, (float, int)):
         raise ValueError()
     ub = 2**(n * (ent + eps))
     lb = (1 - eps) * 2**(n * (ent - eps))
