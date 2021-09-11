@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from utils.information_theory import prob, entropy
+from utils.information_theory import prob, entropy, typical_set_cardinality
 from utils.custom_exceptions import UnsupportedDtype
 
 
@@ -82,3 +82,29 @@ class TestEntropy:
         data = np.array([[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
         with pytest.raises(ValueError):
             entropy(data)
+
+
+class TestCardinality:
+    def test_illegal_arguments(self):
+        with pytest.raises(ValueError):
+            typical_set_cardinality(0, ent=0.1)
+        with pytest.raises(ValueError):
+            typical_set_cardinality(2, eps=0, ent=0.1)
+
+    def test_no_data(self):
+        with pytest.raises(ValueError):
+            typical_set_cardinality(2)
+
+    def test_entropy_provided(self):
+        lb, ub = typical_set_cardinality(2, ent=1, eps=1e-15)
+        assert lb == pytest.approx(4, abs=1e-5)
+        assert ub == pytest.approx(4, abs=1e-5)
+
+    def test_dist_provided(self):
+        lb, ub = typical_set_cardinality(2, pk=np.array([1/2, 1/2]), eps=1e-15)
+        assert lb == pytest.approx(4, abs=1e-5)
+        assert ub == pytest.approx(4, abs=1e-5)
+
+    def test_bad_entropy_type(self):
+        with pytest.raises(ValueError):
+            typical_set_cardinality(2, ent=np.array(1))
