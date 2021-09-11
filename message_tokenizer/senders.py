@@ -1,5 +1,6 @@
 """class for holding known senders, and information regarding them"""
-from __future__ import annotations
+from protocol_meta import dialect_meta as meta, NonExistentMsdId
+from utils.custom_exceptions import NonUint8
 
 
 class KnownSender:
@@ -7,6 +8,8 @@ class KnownSender:
     specific msg_id from specific comp_id's"""
 
     def __init__(self, sys_id: int):
+        if sys_id < 0 or sys_id > 255:
+            raise NonUint8("invalid input, msg_id: {}".format(sys_id))
         self.sys_id: int = sys_id
         self.msg_id: dict = {}  # keys are msg_id's, values are count
         self.comp_id: dict = {}  # keys are comp_id's, values are count
@@ -33,6 +36,13 @@ class KnownSender:
         :param msg_id: msg id of sender
         :param buffer: actual buffer of containing message
         """
+        if comp_id < 0 or comp_id > 255:
+            raise NonUint8("invalid input, comp_id: {}".format(comp_id))
+        if msg_id < 0 or msg_id > 255:
+            raise NonUint8(msg_id)
+        elif msg_id not in meta.msgs_length.keys():
+            raise NonExistentMsdId("msg_id {} does not exist".format(msg_id))
+
         if comp_id not in self.comp_id:
             self.comp_id[comp_id] = 1
             self.msgs_log[comp_id] = {}
