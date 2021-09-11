@@ -57,9 +57,9 @@ class BufferStructure:
 class BufferSegmentation:
     """The class aims to break down a buffer to an ML sequence of MAVLink messages."""
     def __init__(self, msgs_len: dict, protocol_parser_handler: Callable):
-        # noinspection LongLine
         """
-        :param protocol_parser_handler: handler function to parse buffer according to protocol. Handler should return data, and if successful
+        :param protocol_parser_handler: handler function to parse buffer according to protocol. Handler should return
+        data, and if successful
         :param msgs_len: a dictionary with msg_id as keys as messages length as values
         """
         self.msgs_len = msgs_len
@@ -69,7 +69,7 @@ class BufferSegmentation:
 
     def parse_buffer(self, buffer: bytes) -> tuple:
         """
-        Breaks down a buffer to several MAVLink messages. Doesn't attempt any 
+        Breaks down a buffer to several MAVLink messages. Doesn't attempt any
         reconstruction, only break down to good and bad parts.
 
         :param buffer: a buffer containing one or more MAVLink msgs

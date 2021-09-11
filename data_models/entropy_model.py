@@ -6,7 +6,7 @@ from utils.custom_exceptions import IncorrectBufferLength
 import numpy as np
 from utils.information_theory import prob, entropy
 from utils.custom_exceptions import UnsupportedDtype
-from typing import Union, Any
+from typing import Union
 
 
 class EntropyModel(DataModel):
