@@ -1,6 +1,7 @@
 """general base class for all models"""
 from abc import ABC, abstractmethod
 from enum import Enum, auto
+from typing import Any
 
 
 class ModelType(Enum):
@@ -21,8 +22,9 @@ class DataModel(ABC):
         """
 
     @abstractmethod
-    def predict(self, data: bytes, **kwargs):
+    def predict(self, data: bytes, **kwargs) -> tuple[bytes, Any]:
         """Responsible for making predictions regarding originally sent data, based on recent observations and model.
         :param data: recent observation regrading which a prediction is required.
         :param kwargs: all other arguments which the model may require to make predictions.
+        :return: return a tuple containing a prediction as a bytes object and some confidence measure as second element.
         """

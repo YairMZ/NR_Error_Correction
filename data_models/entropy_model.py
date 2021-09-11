@@ -6,7 +6,7 @@ from utils.custom_exceptions import IncorrectBufferLength
 import numpy as np
 from utils.information_theory import prob, entropy
 from utils.custom_exceptions import UnsupportedDtype
-from typing import Union
+from typing import Union, Any
 
 
 class EntropyModel(DataModel):
@@ -58,26 +58,27 @@ class EntropyModel(DataModel):
         self.distribution = prob(self.data)
         self.entropy = np.array(entropy(self.distribution))
 
-    def predict(self, data: bytes, **kwargs) -> bytes:
+    def predict(self, data: bytes, **kwargs) -> tuple[bytes, np.ndarray]:
         """Responsible for making predictions regarding originally sent data, based on recent observations and model.
         :param data: recent observation regrading which a prediction is required.
         :param kwargs: entropy_threshold kw expected as float.
         :raises: ValueError if entropy_threshold kw isn't provided
         """
-        arr = np.array([np.frombuffer(data, dtype=self.element_type)]).T
+        observation = np.array([np.frombuffer(data, dtype=self.element_type)]).T
         if self.bitwise:
-            arr = np.unpackbits(arr, axis=0)
+            observation = np.unpackbits(observation, axis=0)
         if isinstance(kwargs.get("entropy_threshold"), (float, int)):
             self.infer_structure(kwargs.get("entropy_threshold"))
         else:
             raise ValueError()
 
         # replace structural bytes
-        arr[self.structural_elements] = np.array([self.structural_elements_values]).T
+        prediction = observation.copy()
+        prediction[self.structural_elements] = np.array([self.structural_elements_values]).T
         if self.bitwise:
-            arr = np.round(arr).astype(int)
-            arr = np.packbits(arr, axis=0)
-        return arr.tobytes()
+            prediction = np.round(prediction).astype(int)
+            prediction = np.packbits(prediction, axis=0)
+        return prediction.tobytes(), self.entropy
 
     def infer_structure(self, entropy_threshold: float) -> None:
         """structural elements are element with small enough entropy with respect to a threshold"""

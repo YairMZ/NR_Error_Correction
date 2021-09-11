@@ -8,7 +8,7 @@ from data_models import EntropyModel
 class TestEntropyModel:
     def test_unsupported_dtype(self):
         with pytest.raises(UnsupportedDtype):
-            EntropyModel(10, element_type=float)
+            EntropyModel(10, element_type="float")
 
     def test_update_model_wrong_length(self):
         model = EntropyModel(10)
@@ -48,7 +48,7 @@ class TestEntropyModel:
         with pytest.raises(ValueError):
             model.predict(bad_data)
         # predict first byte (corrupted)
-        prediction = model.predict(bad_data, entropy_threshold=1.0)
+        prediction, ent = model.predict(bad_data, entropy_threshold=1.0)
         assert prediction == data[1]
 
     def test_predict_bitwise(self):
@@ -58,7 +58,7 @@ class TestEntropyModel:
             model.update_model(datum)
         bad_data = bytes([20]) + data[1][1:]
         # predict first byte (corrupted)
-        prediction = model.predict(bad_data, entropy_threshold=0.1)
+        prediction, ent = model.predict(bad_data, entropy_threshold=0.1)
         assert prediction == data[1]
 
     def test_predict_int32(self):
@@ -68,7 +68,7 @@ class TestEntropyModel:
             model.update_model(datum)
         bad_data = bytes([20]) + data[1][1:]
         # predict first byte (corrupted)
-        prediction = model.predict(bad_data, entropy_threshold=1)
+        prediction, ent = model.predict(bad_data, entropy_threshold=1)
         assert prediction == data[1]
 
     def test_finite_window(self):
