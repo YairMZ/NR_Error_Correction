@@ -4,7 +4,8 @@ from protocol_meta.msg_header import hamming_distance_2_valid_header, FrameHeade
     NonExistentMsdId
 from utils.custom_exceptions import NonUint8
 from utils.bit_operations import hamming_distance
-from tests.random_test_data_generation import rand_msg, rand_uint8
+from tests.random_test_data_generation import rand_msg, rand_uint8  # type: ignore
+import bitstring  # type: ignore
 
 
 class TestFrameHeader:
@@ -62,6 +63,28 @@ class TestFrameHeader:
         frame = FrameHeader(rand_msg(), rand_uint8(), rand_uint8(), rand_uint8())
         buffer = frame.buffer
         pytest.raises(HeaderLength, frame.hamming_distance, buffer+b"1")
+
+    def test_length(self):
+        frame = FrameHeader(rand_msg(), rand_uint8(), rand_uint8(), rand_uint8())
+        assert frame.length == meta.msgs_length[frame.msg_id]
+
+    def test_bitstring(self):
+        frame = FrameHeader(rand_msg(), rand_uint8(), rand_uint8(), rand_uint8())
+        buffer = frame.buffer
+        assert frame.bit_string == bitstring.Bits(bytes=buffer)
+
+    def test_repr(self):
+        frame = FrameHeader(rand_msg(), rand_uint8(), rand_uint8(), rand_uint8())
+        buffer = frame.buffer
+        assert repr(frame) == str(buffer)
+
+    def test_class_method(self):
+        frame = FrameHeader(meta.msg_ids[0], rand_uint8(), rand_uint8(), rand_uint8())
+        buffer = frame.buffer
+        assert FrameHeader.from_buffer(buffer).buffer == buffer
+        with pytest.raises(HeaderLength):
+            FrameHeader.from_buffer(buffer[:2])
+        assert FrameHeader.from_buffer(buffer, force_msg_id=meta.msg_ids[1]).msg_id == meta.msg_ids[1]
 
 
 class TestIsValidHeader:
