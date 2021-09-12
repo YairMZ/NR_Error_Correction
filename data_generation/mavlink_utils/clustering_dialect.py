@@ -193,9 +193,11 @@ class MAVLink_message(object):
         if self.get_srcComponent() != other.get_srcComponent():
             return False
 
-        return all(
-            self.format_attr(a) == other.format_attr(a) for a in self._fieldnames
-        )
+        for a in self._fieldnames:
+            if self.format_attr(a) != other.format_attr(a):
+                return False
+
+        return True
 
     def to_dict(self):
         d = dict({})
@@ -219,8 +221,12 @@ class MAVLink_message(object):
     def pack(self, mav, crc_extra, payload, force_mavlink1=False):
         plen = len(payload)
         if WIRE_PROTOCOL_VERSION != '1.0' and not force_mavlink1:
+            # in MAVLink2 we can strip trailing zeros off payloads. This allows for simple
+            # variable length arrays and smaller packets
+            nullbyte = chr(0)
             # in Python2, type("fred') is str but also type("fred")==bytes
-            nullbyte = 0 if str(type(payload)) == "<class 'bytes'>" else chr(0)
+            if str(type(payload)) == "<class 'bytes'>":
+                nullbyte = 0
             while plen > 1 and payload[plen-1] == nullbyte:
                 plen -= 1
         self._payload = payload[:plen]
@@ -233,7 +239,8 @@ class MAVLink_message(object):
                                        srcSystem=mav.srcSystem, srcComponent=mav.srcComponent)
         self._msgbuf = self._header.pack(force_mavlink1=force_mavlink1) + self._payload
         crc = x25crc(self._msgbuf[1:])
-        crc.accumulate_str(struct.pack('B', crc_extra))
+        if True: # using CRC extra
+            crc.accumulate_str(struct.pack('B', crc_extra))
         self._crc = crc.crc
         self._msgbuf += struct.pack('<H', self._crc)
         if mav.signing.sign_outgoing and not force_mavlink1:
@@ -244,7 +251,7 @@ class MAVLink_message(object):
         '''support indexing, allowing for multi-instance sensors in one message'''
         if self._instances is None:
             raise IndexError()
-        if key not in self._instances:
+        if not key in self._instances:
             raise IndexError()
         return self._instances[key]
 

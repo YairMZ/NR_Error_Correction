@@ -6,48 +6,50 @@ import plotly.graph_objects as go  # type: ignore
 # pio.renderers.default = "svg"   #to render graphs in pycharm and not browser
 
 rng = np.random.default_rng()     # initialize random seed
-with open("mission_log.mavlink", "wb") as file:
-    mav_obj = mav.MAVLink(file, 1, 1)
+file = open("mission_log.mavlink", "wb")
+mav_obj = mav.MAVLink(file, 1, 1)
 
-    # 1-st mission profile
-    # mission description:
-    #   - 50 messages until diving starts, run on surface
-    #   - 100 messages of dive stage
-    #   - 300 messages in cruise. Two turns along track, each after 100 messages.
-    #   - 50 messages, resurfacing after mission end.
-    #   - three legs, 90 degrees in first turn, and then straight back to ship.
+# 1-st mission profile
+# mission description:
+#   - 50 messages until diving starts, run on surface
+#   - 100 messages of dive stage
+#   - 300 messages in cruise. Two turns along track, each after 100 messages.
+#   - 50 messages, resurfacing after mission end.
+#   - three legs, 90 degrees in first turn, and then straight back to ship.
 
-    number_of_messages = 500
-    diving_angle = 30*np.pi/180  # assume diving angle of 30 degrees
-    velocity = 1  # m/s
-    message_interval = 5  # sec
+number_of_messages = 500
+diving_angle = 30*np.pi/180  # assume diving angle of 30 degrees
+velocity = 1  # m/s
+message_interval = 5  # sec
 
-    # pinger data
-    # range
-    range_noise_sig = 2  # range sigma, in meters.
-    initial_range = 50  # meters
-    # first leg is 200 messages long, 100 dive, and 100 straight
-    first_leg_final_range = initial_range + (velocity * message_interval * 199)
-    second_leg_final_range = np.sqrt(first_leg_final_range**2 + (velocity*message_interval*99)**2)
-    third_leg_final_range = second_leg_final_range - (velocity*message_interval*99)
-    range_noise = np.concatenate((np.zeros(50), rng.normal(scale=range_noise_sig, size=number_of_messages - 50)))
-    pinger_range = np.concatenate((np.zeros(50), np.linspace(initial_range, first_leg_final_range, 200),
-                                   np.linspace(first_leg_final_range, second_leg_final_range, 100),
-                                   np.linspace(second_leg_final_range, third_leg_final_range, 100),
-                                   third_leg_final_range * np.ones(50))) + range_noise
+# pinger data
+# range
+range_noise_sig = 2  # range sigma, in meters.
+initial_range = 50  # meters
+# first leg is 200 messages long, 100 dive, and 100 straight
+first_leg_final_range = initial_range + (velocity * message_interval * 199)
+second_leg_final_range = np.sqrt(first_leg_final_range**2 + (velocity*message_interval*99)**2)
+third_leg_final_range = second_leg_final_range - (velocity*message_interval*99)
+range_noise = np.concatenate((np.zeros(50), rng.normal(scale=range_noise_sig, size=number_of_messages - 50)))
+pinger_range = np.concatenate((np.zeros(50), np.linspace(initial_range, first_leg_final_range, 200),
+                               np.linspace(first_leg_final_range, second_leg_final_range, 100),
+                               np.linspace(second_leg_final_range, third_leg_final_range, 100),
+                               third_leg_final_range * np.ones(50))) + range_noise
 
-    fig = go.Figure(data=go.Scatter(y=pinger_range))
-    fig.show()
+fig = go.Figure(data=go.Scatter(y=pinger_range))
+fig.show()
 
-    # azimuth
-    azimuth_noise_sig = 3  # azimuth sigma, in degrees.
-    azimuth_noise = rng.normal(scale=azimuth_noise_sig, size=number_of_messages)
-    azimuth = np.concatenate((np.zeros(50), np.zeros(200), 90 * np.ones(100), 120 * np.ones(100), 120 * np.ones(50))) + \
-              azimuth_noise
+# azimuth
+azimuth_noise_sig = 3  # azimuth sigma, in degrees.
+azimuth_noise = rng.normal(scale=azimuth_noise_sig, size=number_of_messages)
+azimuth = np.concatenate((np.zeros(50), np.zeros(200), 90 * np.ones(100), 120 * np.ones(100), 120 * np.ones(50))) + \
+          azimuth_noise
 
 
-    fig = go.Figure(data=go.Scatter(y=azimuth))
-    fig.show()
+fig = go.Figure(data=go.Scatter(y=azimuth))
+fig.show()
+file.close()
+
 # SYSTEM_STATUS_2
 hc_mode = np.concatenate((np.zeros(50), 2*np.ones(100), 2*np.ones(300), 4*np.ones(50)))
 hc_system_status = np.concatenate((np.zeros(50), np.ones(100), 2*np.ones(300), 4*np.ones(50)))
