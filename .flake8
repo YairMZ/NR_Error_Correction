@@ -1,0 +1,11 @@
+[flake8]
+exclude =
+    .git,
+    __pycache__,
+    .tox,
+    .eggs,
+    *.egg,
+    data_generation/
+    data/
+    shared_functions/
+    *.m

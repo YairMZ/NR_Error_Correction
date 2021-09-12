@@ -1,0 +1,5 @@
+[run]
+omit =
+    data/*
+    data_generation/*
+    scripts/*

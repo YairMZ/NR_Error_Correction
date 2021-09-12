@@ -11,7 +11,7 @@ import numpy as np
 from typing import Union
 from utils.bit_operations import hamming_distance
 
-valid_headers = 0
+
 class MsgParts(Enum):
     """various types of message parts per protocol meta"""
     HEADER = 0
@@ -57,9 +57,9 @@ class BufferStructure:
 class BufferSegmentation:
     """The class aims to break down a buffer to an ML sequence of MAVLink messages."""
     def __init__(self, msgs_len: dict, protocol_parser_handler: Callable):
-        # noinspection LongLine
         """
-        :param protocol_parser_handler: handler function to parse buffer according to protocol. Handler should return data, and if successful
+        :param protocol_parser_handler: handler function to parse buffer according to protocol. Handler should return
+        data, and if successful
         :param msgs_len: a dictionary with msg_id as keys as messages length as values
         """
         self.msgs_len = msgs_len
@@ -69,7 +69,7 @@ class BufferSegmentation:
 
     def parse_buffer(self, buffer: bytes) -> tuple:
         """
-        Breaks down a buffer to several MAVLink messages. Doesn't attempt any 
+        Breaks down a buffer to several MAVLink messages. Doesn't attempt any
         reconstruction, only break down to good and bad parts.
 
         :param buffer: a buffer containing one or more MAVLink msgs
@@ -120,7 +120,6 @@ class BufferSegmentation:
         else:  # buffer contains errors
             received_structure = BufferStructure(buffer_structure)
             received_structure.register_buffer(buffer)
-
         return msg_parts, bit_validity, received_structure
 
     def register_msg_2_sender(self, header: FrameHeader, msg_buffer: bytes):
@@ -167,7 +166,6 @@ class BufferSegmentation:
         :param structure: buffer structure if known, else defaults to None
         :return:
         """
-        global valid_headers
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
             if isinstance(structure, (dict, BufferStructure)):
                 received_structure = self.register_structure(structure, buffer)
@@ -198,8 +196,6 @@ class BufferSegmentation:
                     # there's a bug somewhere in code below
                     candidate_hdr = FrameHeader.from_buffer(bad_buffer[byte_idx:byte_idx + meta.header_len],
                                                             force_msg_id=chosen_msg_id)
-                    if min_dist == 0:
-                        valid_headers += 1
                     if min_dist > 0:
                         print("corrected {} error bits in header".format(min_dist))
                         print("original header: ", bad_buffer[byte_idx:byte_idx + meta.header_len])

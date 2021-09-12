@@ -52,9 +52,7 @@ def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple
 
     for msg_id, msg_len in meta.msgs_length.items():
         candidate_dist = hamming_distance(msg_len, buffer[1]) + hamming_distance(msg_id, buffer[5])
-        if candidate_dist < min_dist and (
-            max_len is None or msg_len <= max_len
-        ):  # No knowledge regarding max length
+        if candidate_dist < min_dist and (max_len is None or msg_len <= max_len):
             min_dist = candidate_dist
             chosen_msg_id = msg_id
         if candidate_dist == 0:

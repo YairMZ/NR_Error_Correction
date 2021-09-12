@@ -1,23 +1,25 @@
-import unittest
+"""unit tests for the information theory module within the utils package"""
+import pytest
 import numpy as np
-from utils.information_theory import prob, entropy
+from utils.information_theory import prob, entropy, typical_set_cardinality
+from utils.custom_exceptions import UnsupportedDtype
 
 
-class TestProbability(unittest.TestCase):
-    def test_alphabet_size(self):
-        data = np.random.randint(10, size=(10, 10))
-        p = prob(data, 11)
-        self.assertEqual(11, p.shape[1])
+class TestProbability:
+    def test_unsupported_dtype(self):
+        data = np.array([1.1, 2.2])
+        with pytest.raises(UnsupportedDtype):
+            prob(data)
 
     def test_multi_dimension(self):
         data = np.random.randint(10, size=(10, 10))
         p = prob(data)
-        self.assertEqual(10, p.shape[0])
+        assert 10 == p.shape[0]
 
     def test_one_dimension(self):
         data = np.random.randint(10, size=10)
         p = prob(data)
-        self.assertEqual(1, p.ndim)
+        assert 1 == p.ndim
 
     def test_probability(self):
         # randint uses a uniform distribution, so for sufficiently large sample, we expect approximately uniform
@@ -25,39 +27,84 @@ class TestProbability(unittest.TestCase):
         p = prob(data)
         min_val = np.min(p)
         max_val = np.max(p)
-        self.assertAlmostEqual(0.2, min_val, 3)
-        self.assertAlmostEqual(0.2, max_val, 3)
+        assert 0.2 == pytest.approx(min_val, abs=1e-3)
+        assert 0.2 == pytest.approx(max_val, abs=1e-3)
+
+    def test_incompatible_dim(self):
+        data = np.array([[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
+        with pytest.raises(ValueError):
+            prob(data)
+
+    def test_gaps_in_alphabet_2d(self):
+        # Data contain "missing" integers in characters caused broadcast exception in 2d data.
+        data = np.array([[i for i in range(5, 11)], [i for i in range(15, 21)]])
+        p, alphabet = prob(data, return_labels=True)
+        assert alphabet == data.flatten().tolist()
+
+    def test_return_alphabet(self):
+        data = np.array([[i for i in range(5, 11)], [i for i in range(15, 21)]])
+        p, alphabet = prob(data, return_labels=True)
+        assert alphabet == data.flatten().tolist()
+        p, alphabet = prob(data[0], return_labels=True)
+        assert alphabet == data[0].tolist()
 
 
-class TestEntropy(unittest.TestCase):
+class TestEntropy:
     def test_1d_array(self):
         p = np.ones(10)/10
         e = entropy(p)
-        self.assertAlmostEqual(e, np.log2(10))
-        self.assertIsInstance(e, float)
+        assert e == pytest.approx(np.log2(10))
+        assert isinstance(e, float)
 
     def test_2d_array(self):
         p = np.ones((2, 10))/10
         e = entropy(p)
-        self.assertAlmostEqual(e[0], np.log2(10))
-        self.assertAlmostEqual(e[1], np.log2(10))
-        self.assertIsInstance(e, np.ndarray)
+        assert e[0] == pytest.approx(np.log2(10))
+        assert e[1] == pytest.approx(np.log2(10))
+        assert isinstance(e, np.ndarray)
 
     def test_zero_mass_probability_1d(self):
         p = np.ones(10) / 9
         p[9] = 0
         e = entropy(p)
-        self.assertAlmostEqual(e, np.log2(9))
-        self.assertIsInstance(e, float)
+        assert e == pytest.approx(np.log2(9))
+        assert isinstance(e, float)
 
     def test_zero_mass_probability_2d(self):
         p = np.ones((2, 10))/9
         p[:, 9] = 0
         e = entropy(p)
-        self.assertAlmostEqual(e[0], np.log2(9))
-        self.assertAlmostEqual(e[1], np.log2(9))
-        self.assertIsInstance(e, np.ndarray)
+        assert e[0] == pytest.approx(np.log2(9))
+        assert e[1] == pytest.approx(np.log2(9))
+        assert isinstance(e, np.ndarray)
+
+    def test_incompatible_dim(self):
+        data = np.array([[[1, 2], [3, 4]], [[1, 2], [3, 4]]])
+        with pytest.raises(ValueError):
+            entropy(data)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestCardinality:
+    def test_illegal_arguments(self):
+        with pytest.raises(ValueError):
+            typical_set_cardinality(0, ent=0.1)
+        with pytest.raises(ValueError):
+            typical_set_cardinality(2, eps=0, ent=0.1)
+
+    def test_no_data(self):
+        with pytest.raises(ValueError):
+            typical_set_cardinality(2)
+
+    def test_entropy_provided(self):
+        lb, ub = typical_set_cardinality(2, ent=1, eps=1e-15)
+        assert lb == pytest.approx(4, abs=1e-5)
+        assert ub == pytest.approx(4, abs=1e-5)
+
+    def test_dist_provided(self):
+        lb, ub = typical_set_cardinality(2, pk=np.array([1/2, 1/2]), eps=1e-15)
+        assert lb == pytest.approx(4, abs=1e-5)
+        assert ub == pytest.approx(4, abs=1e-5)
+
+    def test_bad_entropy_type(self):
+        with pytest.raises(ValueError):
+            typical_set_cardinality(2, ent=np.array(1))

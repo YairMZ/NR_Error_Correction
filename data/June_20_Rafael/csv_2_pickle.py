@@ -31,4 +31,3 @@ hc_to_ship = {"encoded_rx": binary_rx, "rx_success": rx_success, "encoded_tx": b
 file_b: BinaryIO
 with open('hc_to_ship.pickle', 'wb') as file_b:
     pickle.dump(hc_to_ship, file_b)
-
