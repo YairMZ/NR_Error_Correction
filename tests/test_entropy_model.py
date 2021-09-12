@@ -1,3 +1,4 @@
+"""unit tests for the Entropy model class"""
 import pytest
 import numpy as np
 import bitstring  # type: ignore

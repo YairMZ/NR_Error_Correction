@@ -1,3 +1,4 @@
+"""unit tests for the msg_hdr module from the protocol meta package"""
 import pytest
 from protocol_meta.protocol_meta import dialect_meta as meta
 from protocol_meta.msg_header import hamming_distance_2_valid_header, FrameHeader, is_valid_header, HeaderLength, \

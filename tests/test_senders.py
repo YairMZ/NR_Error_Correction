@@ -1,3 +1,4 @@
+"""unit tests for the Known senders class"""
 import pytest
 from protocol_meta.protocol_meta import dialect_meta as meta
 from message_tokenizer import KnownSender

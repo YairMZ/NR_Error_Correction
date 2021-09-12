@@ -1,6 +1,5 @@
 [run]
 omit =
-    # omit everything in /usr
     data/*
     data_generation/*
     scripts/*

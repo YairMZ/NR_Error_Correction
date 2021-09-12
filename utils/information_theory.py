@@ -19,7 +19,7 @@ def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tup
     if data.ndim == 2:
         alphabet: list = (np.unique(data)).tolist()
         alphabet_size = len(alphabet)
-        pr = np.zeros((data.shape[0], alphabet_size))
+        pr: np.ndarray = np.zeros((data.shape[0], alphabet_size))
         num_samples = data.shape[1]
         for row_idx, row in enumerate(data):
             values, counts = np.unique(row, return_counts=True)
@@ -30,7 +30,6 @@ def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tup
             return pr, alphabet
         else:
             return pr
-        # return np.apply_along_axis(lambda x: np.bincount(x, minlength=alphabet_size), axis=1, arr=data)/num_samples
     elif data.ndim == 1:
         num_samples = data.shape[0]
         alphabet, pr = np.unique(data, return_counts=True)

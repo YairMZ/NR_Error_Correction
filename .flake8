@@ -6,3 +6,6 @@ exclude =
     .eggs,
     *.egg,
     data_generation/
+    data/
+    shared_functions/
+    *.m

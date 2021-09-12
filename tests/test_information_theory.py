@@ -1,3 +1,4 @@
+"""unit tests for the information theory module within the utils package"""
 import pytest
 import numpy as np
 from utils.information_theory import prob, entropy, typical_set_cardinality

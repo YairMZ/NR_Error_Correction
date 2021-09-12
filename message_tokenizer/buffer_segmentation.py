@@ -11,7 +11,7 @@ import numpy as np
 from typing import Union
 from utils.bit_operations import hamming_distance
 
-valid_headers = 0
+
 class MsgParts(Enum):
     """various types of message parts per protocol meta"""
     HEADER = 0
@@ -166,7 +166,6 @@ class BufferSegmentation:
         :param structure: buffer structure if known, else defaults to None
         :return:
         """
-        global valid_headers
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
             if isinstance(structure, (dict, BufferStructure)):
                 received_structure = self.register_structure(structure, buffer)
@@ -197,8 +196,6 @@ class BufferSegmentation:
                     # there's a bug somewhere in code below
                     candidate_hdr = FrameHeader.from_buffer(bad_buffer[byte_idx:byte_idx + meta.header_len],
                                                             force_msg_id=chosen_msg_id)
-                    if min_dist == 0:
-                        valid_headers += 1
                     if min_dist > 0:
                         print("corrected {} error bits in header".format(min_dist))
                         print("original header: ", bad_buffer[byte_idx:byte_idx + meta.header_len])

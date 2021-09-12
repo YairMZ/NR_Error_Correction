@@ -3,7 +3,8 @@ import bitstring  # type: ignore
 from typing import Union
 
 
-def hamming_distance(a: Union[bitstring.Bits, bytes, int], b: Union[bitstring.Bits, bytes, int], uint_len=8) -> int:
+def hamming_distance(a: Union[bitstring.Bits, bytes, int], b: Union[bitstring.Bits, bytes, int],
+                     uint_len: int = 8) -> int:
     """Calculate the Hamming distance. Accept multiple types of inputs
 
     :param a: Union[bitstring.Bits, bytes, int] first object for distance calculation

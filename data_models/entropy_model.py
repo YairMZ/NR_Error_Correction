@@ -80,7 +80,7 @@ class EntropyModel(DataModel):
             prediction = np.packbits(prediction, axis=0)
         return prediction.tobytes(), self.entropy
 
-    def infer_structure(self, entropy_threshold: float) -> None:
+    def infer_structure(self, entropy_threshold: Union[float, int]) -> None:
         """structural elements are element with small enough entropy with respect to a threshold"""
         self.structural_elements = np.flatnonzero(self.entropy < entropy_threshold)
         self.structural_elements_values = np.mean(self.data[self.structural_elements], axis=1)
