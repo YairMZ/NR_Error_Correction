@@ -31,6 +31,7 @@ class BufferStructure:
         self.received_buffers: list[bytes] = []
 
     def __eq__(self, other) -> bool:
+        """We define equality of the structure itself, irrespective of self.received_buffers"""
         if isinstance(other, BufferStructure):
             return self.structure == other.structure
         if isinstance(other, dict):
