@@ -1,5 +1,5 @@
 from typing import Any
-from message_tokenizer import BufferSegmentation, MsgParts
+from inference import BufferSegmentation, MsgParts
 from protocol_meta import dialect_meta as meta
 
 import pickle
@@ -23,9 +23,9 @@ global_distance: list[Any] = []
 valid_headers = 0
 interesting_buffers = []
 for idx, buffer in enumerate(all_transmissions):
-    parts, validity, structure_ = bs.parse_buffer(buffer)
+    parts, validity, structure_ = bs.segment_buffer(buffer)
     if MsgParts.HEADER in parts and ship_rx["rx_success"][idx] == 0:  # if found at least one good message
         interesting_buffers.append(idx)
         print(len(structure_), " good messages")
-        bs.reconstruct_buffer(buffer, 5, validity, parts, structure_)
+        bs.bad_buffer_parts(buffer, 5, validity, parts, structure_)
 print(len(interesting_buffers), " bad buffers with some good messages")
