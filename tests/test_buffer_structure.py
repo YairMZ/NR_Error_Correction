@@ -1,6 +1,6 @@
 """Unit tests for BufferStructure class"""
 import pytest
-from message_tokenizer import BufferStructure
+from inference import BufferStructure
 
 # setup test data
 buffer1 = b'\xfe\x13\x00\x01\x00\xd4\x92\x01K\x16+G\xc0D+\xf4\n?\x00\x00\x80?<\t\x01\x896\xfe\n\x01\x01\x00\xda\x92' \
