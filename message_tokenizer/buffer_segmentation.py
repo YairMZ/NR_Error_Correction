@@ -21,7 +21,7 @@ class MsgParts(Enum):
 
 
 class BufferStructure:
-    """For each known sequence of messages per structure"""
+    """A buffer structure is characterized a set of messages which appear in hte buffer in hte same order """
     def __init__(self, msgs: dict):
         """
         :param msgs: a dict, keys are indices of start of frame within buffer, values are msg ids.
@@ -43,8 +43,11 @@ class BufferStructure:
 
         :param buffer: whole buffer containing also payload
         """
-        self.received_buffers.append(buffer)
-        self.reception_count += 1
+        if self.adheres_to_structure(buffer):
+            self.received_buffers.append(buffer)
+            self.reception_count += 1
+        else:
+            raise ValueError()
 
     def __str__(self) -> str:
         return str(self.structure)
@@ -52,6 +55,17 @@ class BufferStructure:
     def __len__(self):
         """returns the number of messages in structures"""
         return len(self.structure)
+
+    def adheres_to_structure(self, buffer: bytes) -> bool:
+        """Test if a buffer adheres to a structure
+
+        :param buffer: candidate buffer
+        """
+        for idx, msg_id in self.structure.items():
+            hdr = FrameHeader.from_buffer(buffer[idx:idx + meta.header_len])
+            if hdr.msg_id != msg_id:
+                return False
+        return True
 
 
 class BufferSegmentation:
