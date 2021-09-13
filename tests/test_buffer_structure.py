@@ -2,14 +2,6 @@
 import pytest
 from message_tokenizer import BufferStructure
 
-from protocol_meta.protocol_meta import dialect_meta as meta
-from protocol_meta.msg_header import hamming_distance_2_valid_header, FrameHeader, is_valid_header, HeaderLength, \
-    NonExistentMsdId
-from utils.custom_exceptions import NonUint8
-from utils.bit_operations import hamming_distance
-from tests.random_test_data_generation import rand_msg, rand_uint8  # type: ignore
-import bitstring  # type: ignore
-
 # setup test data
 buffer1 = b'\xfe\x13\x00\x01\x00\xd4\x92\x01K\x16+G\xc0D+\xf4\n?\x00\x00\x80?<\t\x01\x896\xfe\n\x01\x01\x00\xda\x92' \
           b'\x01K\x16Z\x0c>\x10\x01d\xd0\xf5\xfe,\x02\x02\x00!\xd1\xffJ\x16\x12?\x97\x11\xb3"\xd2\x14\x00\x00\xc8B' \
