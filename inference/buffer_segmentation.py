@@ -71,15 +71,11 @@ class BufferStructure:
 
 class BufferSegmentation:
     """The class aims to break down a buffer to an ML sequence of MAVLink messages."""
-    def __init__(self, msgs_len: dict, protocol_parser_handler: Callable):
+    def __init__(self, protocol_parser_handler: Callable):
         """
         :param protocol_parser_handler: handler function to parse buffer according to protocol. Handler should return
         data, and if successful
-        :param msgs_len: a dictionary with msg_id as keys as messages length as values
         """
-        self.msgs_len = msgs_len
-        self.known_structures: list[BufferStructure] = []
-        self.known_senders: dict[int, KnownSender] = {}
         self.protocol_parser = protocol_parser_handler
 
     def segment_buffer(self, buffer: bytes) -> tuple[np.ndarray, np.ndarray, dict]:

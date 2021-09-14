@@ -16,7 +16,7 @@ bad_transmissions = [bytes(tx) for tx in bad_transmissions]
 
 all_transmissions = [bytes(tx) for tx in ship_rx["encoded_rx"]]
 
-bs = BufferSegmentation(meta.msgs_length, meta.protocol_parser)
+bs = BufferSegmentation(meta.protocol_parser)
 # for buffer in good_transmissions:
 #     parts, validity, structure_ = bs.parse_buffer(buffer)
 global_distance: list[Any] = []
@@ -27,5 +27,5 @@ for idx, buffer in enumerate(all_transmissions):
     if MsgParts.HEADER in parts and ship_rx["rx_success"][idx] == 0:  # if found at least one good message
         interesting_buffers.append(idx)
         print(len(structure_), " good messages")
-        bs.bad_buffer_parts(buffer, 5, validity, parts, structure_)
+        res = bs.bad_buffer_parts(buffer, parts)
 print(len(interesting_buffers), " bad buffers with some good messages")
