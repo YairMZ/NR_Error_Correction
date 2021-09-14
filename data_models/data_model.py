@@ -27,4 +27,5 @@ class DataModel(ABC):
         :param data: recent observation regrading which a prediction is required.
         :param kwargs: all other arguments which the model may require to make predictions.
         :return: return a tuple containing a prediction as a bytes object and some confidence measure as second element.
+        :rtype: tuple[bytes, Any]
         """

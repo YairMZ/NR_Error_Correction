@@ -63,6 +63,7 @@ class EntropyModel(DataModel):
         :param data: recent observation regrading which a prediction is required.
         :param kwargs: entropy_threshold kw expected as float.
         :raises: ValueError if entropy_threshold kw isn't provided
+        :rtype: tuple[bytes, np.ndarray]
         """
         observation = np.array([np.frombuffer(data, dtype=self.element_type)]).T
         if self.bitwise:

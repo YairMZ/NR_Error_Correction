@@ -7,7 +7,7 @@ from typing import Any
 
 class AlgorithmType(Enum):
     """Enumerate models"""
-    STRUCTURE_BASED = auto()
+    ENTROPY_BASED = auto()
 
 
 class CorrectionAlgorithm(ABC):
@@ -21,7 +21,7 @@ class CorrectionAlgorithm(ABC):
         self.model = data_model
 
     @abstractmethod
-    def correct_data(self, data: bytes, **kwargs) -> tuple[bytes, Any]:
+    def correct_data(self, data: bytes, *args, **kwargs) -> tuple[bytes, Any]:
         """Attempt to correct data
 
         :param data: recent observation
