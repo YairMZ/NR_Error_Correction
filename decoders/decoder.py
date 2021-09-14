@@ -2,6 +2,8 @@ from inference import BufferStructure, KnownSender, BufferSegmentation, MsgParts
 from protocol_meta import dialect_meta as meta
 from typing import Union
 from protocol_meta import FrameHeader
+from algo import EntropyAlgorithm
+from data_models import EntropyModel
 
 
 class Decoder:
@@ -9,18 +11,33 @@ class Decoder:
     def __init__(self):
         self.known_structures: list[BufferStructure] = []
         self.known_senders: dict[int, KnownSender] = {}
-        self.segmentor: BufferSegmentation = BufferSegmentation(meta.msgs_length, meta.protocol_parser)
+        self.segmentor: BufferSegmentation = BufferSegmentation(meta.protocol_parser)
+        self.data_model = EntropyModel(117)  # TODO: Change the hardcoded values
+        self.algorithm = EntropyAlgorithm(self.data_model, 1)  # TODO: Change the hardcoded values
 
-    def decode_buffer(self, buffer: bytes):
-        """decodes a buffer"""
+    def decode_buffer(self, buffer: bytes) -> tuple[bytes, bool]:
+        """decodes a buffer
+
+        :param buffer: buffer to decode
+        :return: returns a tuple (decoded_data, decoding_success)
+        :rtype: tuple[bytes, bool]
+        """
         msg_parts, validity, structure = self.segmentor.segment_buffer(buffer)
-        if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
-            received_structure = self.register_structure(structure, buffer)
         if structure:  # if messages were found register them to sender
             for idx, msg_id in structure.items():
                 hdr = FrameHeader.from_buffer(buffer[idx:idx+meta.header_len])
                 msg_buffer = buffer[idx:idx + hdr.length + meta.protocol_overhead]
                 self.register_msg_2_sender(hdr, msg_buffer)
+        if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
+            received_structure = self.register_structure(structure, buffer)
+            self.data_model.update_model(buffer)
+        else:  # some bad data
+            bad_parts = self.segmentor.bad_buffer_idx(buffer, msg_parts)
+            buffer, entropy = self.algorithm.correct_data(buffer, *bad_parts)
+            msg_parts, validity, structure = self.segmentor.segment_buffer(buffer)
+            if MsgParts.UNKNOWN not in msg_parts:
+                self.data_model.update_model(buffer)
+        return buffer, MsgParts.UNKNOWN not in msg_parts
 
     def register_structure(self, buffer_structure: Union[dict, BufferStructure], buffer: bytes) -> BufferStructure:
         """add a buffer structure to known received buffer structures."""
