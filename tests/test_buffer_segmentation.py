@@ -36,7 +36,8 @@ class TestBufferSegmentation:
         bad_part = bs.bad_buffer_parts(bad_buffer, msg_parts)
         assert bad_part == {27: bad_buffer[27:45]}
 
-
-
-
-
+    def test_bad_buffer_idx(self):
+        bs = BufferSegmentation(meta.protocol_parser)
+        msg_parts, bit_validity, buffer_structure = bs.segment_buffer(bad_buffer)
+        bad_part = bs.bad_buffer_idx(bad_buffer, msg_parts)
+        assert bad_part == [(27, 45)]

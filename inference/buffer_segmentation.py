@@ -149,3 +149,30 @@ class BufferSegmentation:
         if length > 0:  # last part was bad
             bad_buffer_parts[byte_idx - length] = buffer[byte_idx - length:byte_idx]
         return bad_buffer_parts
+
+    @staticmethod
+    def bad_buffer_idx(buffer: bytes, msg_parts: np.ndarray):
+        """The function returns sub buffers of bad parts
+
+        :param buffer: a buffer containing one or more MAVLink msgs
+        :param msg_parts: an np.ndarray which holds an enum value per bytes of the message, which tells how was it
+        classified.
+        :return: a list of tuples, each tuple has a starting and ending index of a bad buffer part
+        """
+        if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
+            return {}
+
+        bad_buffer_parts: list[tuple] = []
+        length = 0
+        byte_idx = 0
+        while byte_idx < len(buffer):
+            if msg_parts[byte_idx] == MsgParts.UNKNOWN:
+                length += 1
+            else:
+                if length > 0:  # previous byte was the last bad byte in a buffer part
+                    bad_buffer_parts.append((byte_idx - length, byte_idx))
+                length = 0
+            byte_idx += 1
+        if length > 0:  # last part was bad
+            bad_buffer_parts.append((byte_idx - length, byte_idx))
+        return bad_buffer_parts
