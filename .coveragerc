@@ -3,3 +3,4 @@ omit =
     data/*
     data_generation/*
     scripts/*
+    mavlink_utils/*
