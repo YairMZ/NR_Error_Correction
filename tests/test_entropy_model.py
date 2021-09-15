@@ -7,17 +7,17 @@ from data_models import EntropyModel
 
 
 class TestEntropyModel:
-    def test_unsupported_dtype(self):
+    def test_unsupported_dtype(self) -> None:
         with pytest.raises(UnsupportedDtype):
             EntropyModel(10, element_type="float")
 
-    def test_update_model_wrong_length(self):
+    def test_update_model_wrong_length(self) -> None:
         model = EntropyModel(10)
         buffer = bytes(range(7))
         with pytest.raises(IncorrectBufferLength):
             model.update_model(buffer)
 
-    def test_update_model(self):
+    def test_update_model(self) -> None:
         """use a simple distribution to check entropy"""
         model = EntropyModel(10)
         buffer = bytes(range(10))
@@ -29,7 +29,7 @@ class TestEntropyModel:
         np.testing.assert_allclose(e, np.array(([0.0] * 40) + [1.0] * 40))
         assert model.data.shape == (80, 2)
 
-    def test_infer_structure(self):
+    def test_infer_structure(self) -> None:
         data = [bytes(list(range(10)) + list(range(i, i+10))) for i in range(10)]
         model = EntropyModel(len(data[0]), False)
         for datum in data:
@@ -39,7 +39,7 @@ class TestEntropyModel:
         np.testing.assert_array_equal(structural_elements, np.array(range(10)))
         np.testing.assert_allclose(structural_elements_values, np.array(range(10)))
 
-    def test_predict(self):
+    def test_predict(self) -> None:
         data = [bytes(list(range(10)) + list(range(i, i + 10))) for i in range(10)]
         model = EntropyModel(len(data[0]), bitwise=False)
         for datum in data:
@@ -52,7 +52,7 @@ class TestEntropyModel:
         prediction, ent = model.predict(bad_data, entropy_threshold=1.0)
         assert prediction == data[1]
 
-    def test_predict_bitwise(self):
+    def test_predict_bitwise(self) -> None:
         data = [bytes(list(range(10)) + list(range(i, i + 10))) for i in range(10)]
         model = EntropyModel(len(data[0]))
         for datum in data:
@@ -62,7 +62,7 @@ class TestEntropyModel:
         prediction, ent = model.predict(bad_data, entropy_threshold=0.1)
         assert prediction == data[1]
 
-    def test_predict_int32(self):
+    def test_predict_int32(self) -> None:
         data = [bytes(list(range(12)) + list(range(3 * i, 3 * i + 12))) for i in range(10)]
         model = EntropyModel(len(data[0]), bitwise=False, element_type="int32")
         for datum in data:
@@ -72,7 +72,7 @@ class TestEntropyModel:
         prediction, ent = model.predict(bad_data, entropy_threshold=1)
         assert prediction == data[1]
 
-    def test_finite_window(self):
+    def test_finite_window(self) -> None:
         data = [bytes(list(range(12)) + list(range(3 * i, 3 * i + 12))) for i in range(10)]
         window_length = 5
         model = EntropyModel(len(data[0]), bitwise=False, element_type="int32", window_length=window_length)

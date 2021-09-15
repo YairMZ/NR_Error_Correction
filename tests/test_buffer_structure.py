@@ -14,7 +14,7 @@ buffer2 = b'\xfe\x13\n\x01\x00\xd4jg\xd7\x16\rJ\xc0DQ\x9c=?\x00\x00@@?\t\x01\xd1
 
 
 class TestBufferStructure:
-    def test_equality(self):
+    def test_equality(self) -> None:
         first_structure = BufferStructure({0: 212, 27: 218, 45: 33, 97: 234})
         second_structure = BufferStructure({0: 212, 27: 218, 45: 33, 97: 234})
         third_structure = BufferStructure({0: 212, 27: 218, 45: 33})
@@ -25,7 +25,7 @@ class TestBufferStructure:
         assert first_structure == {0: 212, 27: 218, 45: 33, 97: 234}
         assert first_structure != 1
 
-    def test_register_buffer(self):
+    def test_register_buffer(self) -> None:
         first_structure = BufferStructure({0: 212, 27: 218, 45: 33, 97: 234})
         first_structure.register_buffer(buffer1)
         assert first_structure.reception_count == 1
@@ -33,16 +33,16 @@ class TestBufferStructure:
             buffer = buffer1[::-1]  # reverse buffer breaks structure
             first_structure.register_buffer(buffer)
 
-    def test_adheres_to_structure(self):
+    def test_adheres_to_structure(self) -> None:
         structure = BufferStructure({0: 212, 27: 218, 45: 33, 97: 234})
         assert structure.adheres_to_structure(buffer1) is True
         structure = BufferStructure({0: 212, 27: 218, 45: 33, 97: 235})
         assert structure.adheres_to_structure(buffer1) is False
 
-    def test_str(self):
+    def test_str(self) -> None:
         structure = BufferStructure({0: 212, 27: 218, 45: 33, 97: 234})
         assert str(structure) == '{0: 212, 27: 218, 45: 33, 97: 234}'
 
-    def test_len(self):
+    def test_len(self) -> None:
         structure = BufferStructure({0: 212, 27: 218, 45: 33, 97: 234})
         assert len(structure) == 4

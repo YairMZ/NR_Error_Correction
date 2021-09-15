@@ -7,7 +7,7 @@ from utils.custom_exceptions import NonUint8
 
 
 class TestKnownSender:
-    def test_wrong_sys_id(self):
+    def test_wrong_sys_id(self) -> None:
         # negative sys_id
         with pytest.raises(NonUint8):
             KnownSender(-1)
@@ -15,7 +15,7 @@ class TestKnownSender:
         with pytest.raises(NonUint8):
             KnownSender(256)
 
-    def test_wrong_comp_id(self):
+    def test_wrong_comp_id(self) -> None:
         a = KnownSender(0)
         msg_id = meta.msg_ids[0]
         # negative comp_id
@@ -25,7 +25,7 @@ class TestKnownSender:
         with pytest.raises(NonUint8):
             a.register_msg(256, msg_id, b"")
 
-    def test_wrong_msg_id(self):
+    def test_wrong_msg_id(self) -> None:
         a = KnownSender(0)
         # negative msg_id
         with pytest.raises(NonUint8):
@@ -41,22 +41,22 @@ class TestKnownSender:
             with pytest.raises(NonExistentMsdId):
                 a.register_msg(0, possible_ids[0], b"")
 
-    def test_hash_sender(self):
+    def test_hash_sender(self) -> None:
         assert 0 == hash(KnownSender(0))
 
-    def test_repr(self):
+    def test_repr(self) -> None:
         assert repr(KnownSender(0)) == "0_{}"
 
-    def test_str(self):
+    def test_str(self) -> None:
         assert str(KnownSender(0)) == "system 0, component {}, msg {}"
 
-    def test_register(self):
+    def test_register(self) -> None:
         a = KnownSender(0)
         a.register_msg(0, meta.msg_ids[0], b"\x00\x01")
         a.register_msg(0, meta.msg_ids[0], b"\x00\x01")
         assert a.msgs_log == {0: {0: [b'\x00\x01', b'\x00\x01']}}
 
-    def test_equality(self):
+    def test_equality(self) -> None:
         a = KnownSender(0)
         b = KnownSender(0)
         assert a == 0
