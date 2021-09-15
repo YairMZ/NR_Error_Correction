@@ -1,6 +1,6 @@
 """meta data of specific mavlink dialect"""
-import data_generation.mavlink_utils.clustering_dialect as dialect  # type: ignore
-from data_generation.mavlink_utils.clustering_dialect import MAVError  # expose class directly to whomever imports meta
+import mavlink_utils.clustering_dialect as dialect
+from mavlink_utils.clustering_dialect import MAVError  # expose class directly to whomever imports meta
 from typing import Callable
 
 STX = dialect.PROTOCOL_MARKER_V1
