@@ -1,6 +1,6 @@
 """Handling of Mavlink headers"""
 from protocol_meta import dialect_meta as meta
-import bitstring  # type: ignore
+import bitstring
 from utils.custom_exceptions import NonUint8
 from utils.bit_operations import hamming_distance
 

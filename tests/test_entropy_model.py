@@ -1,7 +1,7 @@
 """unit tests for the Entropy model class"""
 import pytest
 import numpy as np
-import bitstring  # type: ignore
+import bitstring
 from utils.custom_exceptions import IncorrectBufferLength, UnsupportedDtype
 from data_models import EntropyModel
 

@@ -6,7 +6,7 @@ from protocol_meta.msg_header import hamming_distance_2_valid_header, FrameHeade
 from utils.custom_exceptions import NonUint8
 from utils.bit_operations import hamming_distance
 from data_generation.random_test_data_generation import rand_msg, rand_uint8
-import bitstring  # type: ignore
+import bitstring
 
 
 class TestFrameHeader:

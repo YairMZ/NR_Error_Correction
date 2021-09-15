@@ -1,5 +1,5 @@
 """functions for performing operations on the binary representation of variables."""
-import bitstring  # type: ignore
+import bitstring
 from typing import Union
 
 
