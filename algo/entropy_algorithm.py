@@ -2,7 +2,7 @@
 from data_models import EntropyModel
 from typing import Any
 from .correction_algorithm import CorrectionAlgorithm, AlgorithmType
-from typing import  Union
+from typing import Union
 
 
 class EntropyAlgorithm(CorrectionAlgorithm):
@@ -30,8 +30,3 @@ class EntropyAlgorithm(CorrectionAlgorithm):
         for start_idx, end_idx in args:
             prediction[start_idx:end_idx] = model_prediction[start_idx:end_idx]
         return bytes(prediction), entropy
-
-
-
-
-

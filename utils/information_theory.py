@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.stats import entropy as scipy_ent  # type: ignore
 from typing import Union
-from .custom_exceptions import UnsupportedDtype   # type: ignore
+from .custom_exceptions import UnsupportedDtype
 
 
 def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tuple[np.ndarray, list]]:
@@ -32,10 +32,10 @@ def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tup
             return pr
     elif data.ndim == 1:
         num_samples = data.shape[0]
-        alphabet, pr = np.unique(data, return_counts=True)
+        alphabet_arr, pr = np.unique(data, return_counts=True)
         pr = np.divide(pr, num_samples)
         if return_labels:
-            return pr, alphabet.tolist()
+            return pr, alphabet_arr.tolist()
         else:
             return pr
     else:
@@ -74,9 +74,11 @@ def typical_set_cardinality(n: int, pk: np.ndarray = None, ent: float = None, ep
         if pk is None:
             raise ValueError()
         else:
-            ent = entropy(pk, base=2)
-    if not isinstance(ent, (float, int)):
+            ent_f = entropy(pk, base=2)
+    else:
+        ent_f = ent
+    if not isinstance(ent_f, (float, int)):
         raise ValueError()
-    ub = 2**(n * (ent + eps))
-    lb = (1 - eps) * 2**(n * (ent - eps))
+    ub = 2**(n * (ent_f + eps))
+    lb = (1 - eps) * 2**(n * (ent_f - eps))
     return lb, ub

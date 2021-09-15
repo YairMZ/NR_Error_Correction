@@ -1,15 +1,11 @@
 """break down a buffer to good and bad parts. Classify buffer parts according to protocol meta data"""
 from __future__ import annotations
 from enum import Enum
-import bitstring  # type: ignore
-from .senders import KnownSender
 from protocol_meta import dialect_meta as meta
-from protocol_meta import hamming_distance_2_valid_header, FrameHeader, is_valid_header, MAVError
+from protocol_meta import FrameHeader, is_valid_header, MAVError
 from typing import Callable
 from array import array
 import numpy as np
-from typing import Union
-from utils.bit_operations import hamming_distance
 
 
 class MsgParts(Enum):

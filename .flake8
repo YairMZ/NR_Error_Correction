@@ -9,3 +9,5 @@ exclude =
     data/
     shared_functions/
     *.m
+    mavlink_utils/
+    *__init__.py

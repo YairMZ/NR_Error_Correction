@@ -1,7 +1,7 @@
 """
 Model which inheres structure bits based on entropy of previous buffers of assumed similar structure
 """
-from .data_model import DataModel, ModelType  # type: ignore
+from .data_model import DataModel, ModelType
 from utils.custom_exceptions import IncorrectBufferLength
 import numpy as np
 from utils.information_theory import prob, entropy
@@ -69,7 +69,7 @@ class EntropyModel(DataModel):
         if self.bitwise:
             observation = np.unpackbits(observation, axis=0)
         if isinstance(kwargs.get("entropy_threshold"), (float, int)):
-            self.infer_structure(kwargs.get("entropy_threshold"))
+            self.infer_structure(kwargs.get("entropy_threshold", 1.0))
         else:
             raise ValueError()
 

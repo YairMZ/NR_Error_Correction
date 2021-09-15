@@ -1,5 +1,4 @@
 """Unit tests for BufferStructure class"""
-import pytest
 from inference import BufferSegmentation, MsgParts
 from protocol_meta import dialect_meta as meta
 import numpy as np
