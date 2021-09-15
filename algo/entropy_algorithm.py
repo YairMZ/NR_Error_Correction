@@ -1,7 +1,7 @@
 """Class for implementing entropy based error correction"""
 from data_models import EntropyModel
 from typing import Any
-from .correction_algorithm import CorrectionAlgorithm, AlgorithmType
+from algo import CorrectionAlgorithm, AlgorithmType
 from typing import Union
 
 
@@ -18,7 +18,7 @@ class EntropyAlgorithm(CorrectionAlgorithm):
         self.entropy_threshold = entropy_threshold
         super().__init__(AlgorithmType.ENTROPY_BASED, data_model)
 
-    def correct_data(self, data: bytes, *args, **kwargs) -> tuple[bytes, Any]:
+    def correct_data(self, data: bytes, *args: Any, **kwargs: Any) -> tuple[bytes, Any]:
         """Attempt to correct data using the entropy model. args ere expected to be tuples of staring and ending indices
         of bad buffer parts
 

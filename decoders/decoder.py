@@ -1,3 +1,4 @@
+"""Basic decoder"""
 from inference import BufferStructure, KnownSender, BufferSegmentation, MsgParts
 from protocol_meta import dialect_meta as meta
 from typing import Union
@@ -8,7 +9,7 @@ from data_models import EntropyModel
 
 class Decoder:
     """base class for potential decoders"""
-    def __init__(self):
+    def __init__(self) -> None:
         self.known_structures: list[BufferStructure] = []
         self.known_senders: dict[int, KnownSender] = {}
         self.segmentor: BufferSegmentation = BufferSegmentation(meta.protocol_parser)
@@ -33,13 +34,15 @@ class Decoder:
             self.data_model.update_model(buffer)
         else:  # some bad data
             bad_parts = self.segmentor.bad_buffer_idx(buffer, msg_parts)
-            buffer, entropy = self.algorithm.correct_data(buffer, *bad_parts)
-            msg_parts, validity, structure = self.segmentor.segment_buffer(buffer)
-            if MsgParts.UNKNOWN not in msg_parts:
-                self.data_model.update_model(buffer)
+            if isinstance(bad_parts, list):
+                buffer, entropy = self.algorithm.correct_data(buffer, *bad_parts)
+                msg_parts, validity, structure = self.segmentor.segment_buffer(buffer)
+                if MsgParts.UNKNOWN not in msg_parts:
+                    self.data_model.update_model(buffer)
         return buffer, MsgParts.UNKNOWN not in msg_parts
 
-    def register_structure(self, buffer_structure: Union[dict, BufferStructure], buffer: bytes) -> BufferStructure:
+    def register_structure(self, buffer_structure: Union[dict[int, int], BufferStructure], buffer: bytes
+                           ) -> BufferStructure:
         """add a buffer structure to known received buffer structures."""
         if isinstance(buffer_structure, BufferStructure) and not buffer_structure.structure:
             raise ValueError("can't register an empty structure")
@@ -62,7 +65,7 @@ class Decoder:
 
         return received_structure
 
-    def register_msg_2_sender(self, header: FrameHeader, msg_buffer: bytes):
+    def register_msg_2_sender(self, header: FrameHeader, msg_buffer: bytes) -> None:
         """add a message to message known to be sent by sender"""
         if header.sys_id not in self.known_senders:  # if this is a new sender
             self.known_senders[header.sys_id] = KnownSender(header.sys_id)

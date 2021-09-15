@@ -1,8 +1,10 @@
 """Handling of Mavlink headers"""
+from __future__ import annotations
 from protocol_meta import dialect_meta as meta
 import bitstring
 from utils.custom_exceptions import NonUint8
 from utils.bit_operations import hamming_distance
+from typing import Optional
 
 
 class HeaderLength(Exception):
@@ -31,7 +33,7 @@ def is_valid_header(buffer: bytes) -> bool:
     return buffer[0] == meta.stx and buffer[5] in meta.msgs_length.keys() and meta.msgs_length.get(buffer[5]) == buffer[1]
 
 
-def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple:
+def hamming_distance_2_valid_header(buffer: bytes, max_len: Optional[int] = None) -> tuple[int, int]:
     """
     The function calculates the Hamming distance to the closest valid header. A valid header starts with magic marker,
     and has valid msg_id and corresponding length
@@ -48,7 +50,7 @@ def hamming_distance_2_valid_header(buffer: bytes, max_len: int = None) -> tuple
 
     # find minimal distance from possible lengths and message ids
     min_dist = 17  # since we're comparing the Hamming distance of two byte pairs, hamming distance cannot exceed 16
-    chosen_msg_id = None
+    chosen_msg_id: int = -1
 
     for msg_id, msg_len in meta.msgs_length.items():
         candidate_dist = hamming_distance(msg_len, buffer[1]) + hamming_distance(msg_id, buffer[5])
@@ -68,7 +70,7 @@ class FrameHeader:
     def __init__(self, msg_id: int, sys_id: int, comp_id: int, seq: int):
         if sys_id < 0 or comp_id < 0 or seq < 0 or sys_id > 255 or comp_id > 255 or seq > 255:
             raise NonUint8("invalid input, msg_id: {}, comp_id: {}, seq: {}".format(msg_id, comp_id, seq))
-        if msg_id in meta.msgs_length.keys():
+        if msg_id in meta.msgs_length:
             length: int = meta.msgs_length.get(msg_id)
         elif msg_id < 0 or msg_id > 255:
             raise NonUint8(msg_id)
@@ -113,14 +115,14 @@ class FrameHeader:
             raise HeaderLength("incorrect header length of {}".format(len(some_buffer)))
         return hamming_distance(self.buffer, some_buffer)
 
-    def __str__(self):
-        "sys_id " + str(self.sys_id) + ", msg_id " + str(self.msg_id)
+    def __str__(self) -> str:
+        return "sys_id " + str(self.sys_id) + ", msg_id " + str(self.msg_id)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self.buffer)
 
     @classmethod
-    def from_buffer(cls, buffer: bytes, force_msg_id: int = None):
+    def from_buffer(cls, buffer: bytes, force_msg_id: Optional[int] = None) -> FrameHeader:
         """
         construct  aframe header from a buffer
         :param buffer: buffer of appropriate length

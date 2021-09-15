@@ -3,9 +3,10 @@ from __future__ import annotations
 from enum import Enum
 from protocol_meta import dialect_meta as meta
 from protocol_meta import FrameHeader, is_valid_header, MAVError
-from typing import Callable
+from typing import Callable, Union, Any
 from array import array
 import numpy as np
+import numpy.typing as npt
 
 
 class MsgParts(Enum):
@@ -18,15 +19,15 @@ class MsgParts(Enum):
 
 class BufferStructure:
     """A buffer structure is characterized a set of messages which appear in hte buffer in hte same order """
-    def __init__(self, msgs: dict):
+    def __init__(self, msgs: dict[int, int]):
         """
         :param msgs: a dict, keys are indices of start of frame within buffer, values are msg ids.
         """
-        self.structure: dict = msgs
+        self.structure: dict[int, int] = msgs
         self.reception_count: int = 0
         self.received_buffers: list[bytes] = []
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         """We define equality of the structure itself, irrespective of self.received_buffers"""
         if isinstance(other, BufferStructure):
             return self.structure == other.structure
@@ -49,7 +50,7 @@ class BufferStructure:
     def __str__(self) -> str:
         return str(self.structure)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """returns the number of messages in structures"""
         return len(self.structure)
 
@@ -67,14 +68,14 @@ class BufferStructure:
 
 class BufferSegmentation:
     """The class aims to break down a buffer to an ML sequence of MAVLink messages."""
-    def __init__(self, protocol_parser_handler: Callable):
+    def __init__(self, protocol_parser_handler: Callable[[array], object]):
         """
         :param protocol_parser_handler: handler function to parse buffer according to protocol. Handler should return
         data, and if successful
         """
         self.protocol_parser = protocol_parser_handler
 
-    def segment_buffer(self, buffer: bytes) -> tuple[np.ndarray, np.ndarray, dict]:
+    def segment_buffer(self, buffer: bytes) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.float64], dict[int, int]]:
         """
         Breaks down a buffer to several MAVLink messages. Doesn't attempt any
         reconstruction, only break down to good and bad parts.
@@ -88,7 +89,7 @@ class BufferSegmentation:
         # It tells how was it classified
         bit_validity = np.array([0]*len(buffer) * 8)  # This tells how certain are we of the correctness of bit value.
         # 1 is correct, -1 is incorrect, and 0 is unknown
-        buffer_structure = {}
+        buffer_structure: dict[int, int] = {}
 
         # Go over buffer once. Locate good messages, passing CRC
         for byte_idx in range(len(buffer) - meta.protocol_overhead + 1):  # don't go over last bytes as to not raise a
@@ -119,7 +120,7 @@ class BufferSegmentation:
         return msg_parts, bit_validity, buffer_structure
 
     @staticmethod
-    def bad_buffer_parts(buffer: bytes, msg_parts: np.ndarray) -> dict:
+    def bad_buffer_parts(buffer: bytes, msg_parts: npt.NDArray[np.object_]) -> dict[int, bytes]:
         """The function returns sub buffers of bad parts
 
         :param buffer: a buffer containing one or more MAVLink msgs
@@ -147,18 +148,19 @@ class BufferSegmentation:
         return bad_buffer_parts
 
     @staticmethod
-    def bad_buffer_idx(buffer: bytes, msg_parts: np.ndarray):
+    def bad_buffer_idx(buffer: bytes, msg_parts: npt.NDArray[np.object_]) -> Union[None, list[tuple[int, int]]]:
         """The function returns sub buffers of bad parts
 
         :param buffer: a buffer containing one or more MAVLink msgs
         :param msg_parts: an np.ndarray which holds an enum value per bytes of the message, which tells how was it
         classified.
-        :return: a list of tuples, each tuple has a starting and ending index of a bad buffer part
+        :return: a list of tuples, each tuple has a starting and ending index of a bad buffer part, and none if buffer
+        is good
         """
         if MsgParts.UNKNOWN not in msg_parts:  # buffer fully recovered
-            return {}
+            return None
 
-        bad_buffer_parts: list[tuple] = []
+        bad_buffer_parts: list[tuple[int, int]] = []
         length = 0
         byte_idx = 0
         while byte_idx < len(buffer):

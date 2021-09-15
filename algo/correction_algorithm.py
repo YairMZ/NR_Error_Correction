@@ -21,7 +21,7 @@ class CorrectionAlgorithm(ABC):
         self.model = data_model
 
     @abstractmethod
-    def correct_data(self, data: bytes, *args, **kwargs) -> tuple[bytes, Any]:
+    def correct_data(self, data: bytes, *args: Any, **kwargs: Any) -> tuple[bytes, Any]:
         """Attempt to correct data
 
         :param data: recent observation

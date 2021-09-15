@@ -15,14 +15,14 @@ class DataModel(ABC):
         self.model_type = model_type
 
     @abstractmethod
-    def update_model(self, new_data: bytes, **kwargs) -> None:
+    def update_model(self, new_data: bytes, **kwargs: Any) -> None:
         """The method is responsible to update the model based on new observations.
         :param new_data: observation used to refine model
         :param kwargs: all other arguments which the model may require for the update
         """
 
     @abstractmethod
-    def predict(self, data: bytes, **kwargs) -> tuple[bytes, Any]:
+    def predict(self, data: bytes, **kwargs: Any) -> tuple[bytes, Any]:
         """Responsible for making predictions regarding originally sent data, based on recent observations and model.
         :param data: recent observation regrading which a prediction is required.
         :param kwargs: all other arguments which the model may require to make predictions.
