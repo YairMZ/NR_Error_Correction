@@ -1,7 +1,7 @@
 """unit tests for bit_operations module within the utils package"""
 import pytest
 import bitstring  # type: ignore
-from random_test_data_generation import rand_uint8, rand_bitstring  # type: ignore
+from data_generation.random_test_data_generation import rand_uint8, rand_bitstring
 from utils.bit_operations import hamming_distance
 import random
 

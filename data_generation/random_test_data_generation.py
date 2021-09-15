@@ -1,8 +1,6 @@
 """utility functions used throughout tests"""
 import random
-
 import bitstring  # type: ignore
-
 from protocol_meta.protocol_meta import dialect_meta as meta
 
 
