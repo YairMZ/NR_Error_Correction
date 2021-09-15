@@ -2,7 +2,7 @@
 import mavlink_utils.clustering_dialect as dialect
 from mavlink_utils.clustering_dialect import MAVError  # expose class directly to whomever imports meta
 from typing import Callable
-from array import array
+from collections.abc import MutableSequence
 
 STX = dialect.PROTOCOL_MARKER_V1
 field_lengths = {"uint32_t": 4, "float": 4, "uint16_t": 2, "uint8_t": 1, "int32_t": 4, }  # field length in bytes
@@ -15,7 +15,7 @@ protocol_overhead = header_length + crc_length
 class MavlinkDialectMeta:
     """This class describes the structure of a general Mavlink dialect"""
     def __init__(self, stx: int,  header_len: int, crc_len: int, msg_ids_: list[int], field_lengths_: dict[str, int],
-                 protocol_parser: Callable[[array], object]):
+                 protocol_parser: Callable[[MutableSequence[int]], object]):
         self.stx: int = stx
         self.header_len: int = header_len
         self.crc_len: int = crc_len

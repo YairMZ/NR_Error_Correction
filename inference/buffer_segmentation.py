@@ -7,6 +7,7 @@ from typing import Callable, Union, Any
 from array import array
 import numpy as np
 import numpy.typing as npt
+from collections.abc import MutableSequence
 
 
 class MsgParts(Enum):
@@ -68,7 +69,7 @@ class BufferStructure:
 
 class BufferSegmentation:
     """The class aims to break down a buffer to an ML sequence of MAVLink messages."""
-    def __init__(self, protocol_parser_handler: Callable[[array], object]):
+    def __init__(self, protocol_parser_handler: Callable[[MutableSequence[int]], object]):
         """
         :param protocol_parser_handler: handler function to parse buffer according to protocol. Handler should return
         data, and if successful
