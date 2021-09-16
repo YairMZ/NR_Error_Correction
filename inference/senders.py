@@ -1,6 +1,7 @@
 """class for holding known senders, and information regarding them"""
 from protocol_meta import dialect_meta as meta, NonExistentMsdId
 from utils.custom_exceptions import NonUint8
+from typing import Any
 
 
 class KnownSender:
@@ -11,17 +12,18 @@ class KnownSender:
         if sys_id < 0 or sys_id > 255:
             raise NonUint8("invalid input, msg_id: {}".format(sys_id))
         self.sys_id: int = sys_id
-        self.msg_id: dict = {}  # keys are msg_id's, values are count
-        self.comp_id: dict = {}  # keys are comp_id's, values are count
+        self.msg_id: dict[int, int] = {}  # keys are msg_id's, values are count
+        self.comp_id: dict[int, int] = {}  # keys are comp_id's, values are count
         self.msg_count: int = 0  # overall msg count for sender
-        self.msgs_log: dict = {}  # overall message log for sender including msg_id, comp_id and and actual buffer.
-        # Keys are comp_id, and values are dicts with keys as msg_ids. These dicts ave as value a list of buffers.
+        self.msgs_log: dict[int, dict[int, list[bytes]]] = {}
+        # overall message log for sender including msg_id, comp_id and and actual buffer.
+        # Keys are comp_id, and values are dicts with keys as msg_ids. These dicts have as value a list of buffers.
         # example: {comp_id1: {msg_id1: [buff1, buff2], msg_id2: [buff3, buff4, buff5]}}
 
     def __hash__(self) -> int:
         return hash(self.sys_id)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, KnownSender):
             return self.sys_id == other.sys_id
         if isinstance(other, int):

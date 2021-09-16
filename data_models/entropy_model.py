@@ -1,12 +1,13 @@
 """
 Model which inheres structure bits based on entropy of previous buffers of assumed similar structure
 """
-from .data_model import DataModel, ModelType
+from data_models import DataModel, ModelType
 from utils.custom_exceptions import IncorrectBufferLength
 import numpy as np
 from utils.information_theory import prob, entropy
 from utils.custom_exceptions import UnsupportedDtype
-from typing import Union
+from typing import Union, Any
+import numpy.typing as npt
 
 
 class EntropyModel(DataModel):
@@ -34,14 +35,14 @@ class EntropyModel(DataModel):
         self.bitwise: bool = bitwise
         self.element_type = np.uint8 if bitwise else self.data_type.get(element_type)
         self.alphabet_size = self.alphabet_size_dict.get(element_type)
-        self.data: np.ndarray = np.array([])  # 2d array, each column is a sample
-        self.distribution: np.ndarray = np.array([])  # estimated distribution
-        self.entropy: np.ndarray = np.array([])
-        self.structural_elements: np.ndarray = np.array([])  # indices of elements with low entropy
-        self.structural_elements_values: np.ndarray = np.array([])  # mean value of structural elements
+        self.data: npt.NDArray[Any] = np.array([])  # 2d array, each column is a sample
+        self.distribution: npt.NDArray[np.float64] = np.array([])  # estimated distribution
+        self.entropy: npt.NDArray[np.float64] = np.array([])
+        self.structural_elements: npt.NDArray[np.int64] = np.array([])  # indices of elements with low entropy
+        self.structural_elements_values: npt.NDArray[np.float64] = np.array([])  # mean value of structural elements
         super().__init__(ModelType.ENTROPY)
 
-    def update_model(self, new_data: bytes, **kwargs) -> None:
+    def update_model(self, new_data: bytes, **kwargs: Any) -> None:
         """The method is responsible to update the model based on new observations.
         :param new_data: observation used to refine model
         :param kwargs: all other arguments which the model may require for the update
@@ -58,7 +59,7 @@ class EntropyModel(DataModel):
         self.distribution = prob(self.data)
         self.entropy = np.array(entropy(self.distribution))
 
-    def predict(self, data: bytes, **kwargs) -> tuple[bytes, np.ndarray]:
+    def predict(self, data: bytes, **kwargs: Any) -> tuple[bytes, npt.NDArray[np.float64]]:
         """Responsible for making predictions regarding originally sent data, based on recent observations and model.
         :param data: recent observation regrading which a prediction is required.
         :param kwargs: entropy_threshold kw expected as float.
@@ -86,7 +87,7 @@ class EntropyModel(DataModel):
         self.structural_elements = np.flatnonzero(self.entropy < entropy_threshold)
         self.structural_elements_values = np.mean(self.data[self.structural_elements], axis=1)
 
-    def get_structure(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_structure(self) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
         """
         Getter for structure members, no calculation.
         :return: structural_elements, structural_elements_values

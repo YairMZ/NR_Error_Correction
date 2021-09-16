@@ -1,11 +1,13 @@
 """various statistical functions, information theory measures, and convenience wrappers around scipy"""
 import numpy as np
 from scipy.stats import entropy as scipy_ent  # type: ignore
-from typing import Union
-from .custom_exceptions import UnsupportedDtype
+from typing import Union, Any, Optional
+from utils.custom_exceptions import UnsupportedDtype
+import numpy.typing as npt
 
 
-def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tuple[np.ndarray, list]]:
+def prob(data: npt.NDArray[Any], return_labels: bool = False
+         ) -> Union[npt.NDArray[np.float64], tuple[npt.NDArray[np.float64], list[Any]]]:
     """Estimate the probability distribution given samples. Doesn't work with floating point values.
 
     :param data: a 1D or 2D numpy array. Each row is a dimension and each column an observation
@@ -17,9 +19,9 @@ def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tup
     # TODO - add ability to return joint distribution - can be done with np.unique along axis
 
     if data.ndim == 2:
-        alphabet: list = (np.unique(data)).tolist()
+        alphabet: list[Any] = np.unique(data).tolist()
         alphabet_size = len(alphabet)
-        pr: np.ndarray = np.zeros((data.shape[0], alphabet_size))
+        pr: npt.NDArray[Any] = np.zeros((data.shape[0], alphabet_size))
         num_samples = data.shape[1]
         for row_idx, row in enumerate(data):
             values, counts = np.unique(row, return_counts=True)
@@ -42,12 +44,12 @@ def prob(data: np.ndarray, return_labels: bool = False) -> Union[np.ndarray, tup
         raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
 
 
-def entropy(pk: np.ndarray, base: int = 2) -> Union[np.ndarray, float]:
+def entropy(pk: npt.NDArray[Any], base: int = 2) -> Union[npt.NDArray[Any], float]:
     """This is a wrapper around scipy's entropy function. Seamlessly treat 1d and 2d arrays.
 
     :param pk: an array representing a PMF. number of columns is alphabet size, and number of rows is number of RV's.
     :param base: base of logarithm for entropy calculation. Defaults to 2 (entropy in units of bits).
-    :rtype: Union[np.ndarray, float]
+    :rtype: Union[npt.NDArray[Any], float]
     """
     if pk.ndim == 2:
         return scipy_ent(pk, base=base, axis=1)
@@ -56,7 +58,8 @@ def entropy(pk: np.ndarray, base: int = 2) -> Union[np.ndarray, float]:
     raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
 
 
-def typical_set_cardinality(n: int, pk: np.ndarray = None, ent: float = None, eps: float = 1e-5) -> tuple[float, float]:
+def typical_set_cardinality(n: int, pk: Optional[npt.NDArray[Any]] = None, ent: Optional[float] = None,
+                            eps: float = 1e-5) -> tuple[float, float]:
     # noinspection LongLine
     """Given an distribution describing an i.i.d process, how many typical sequences of length n are there?
 

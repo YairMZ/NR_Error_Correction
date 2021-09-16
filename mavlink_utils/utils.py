@@ -1,8 +1,8 @@
 from pymavlink.generator import mavgen  # type: ignore
-from pymavlink.generator import mavparse  # type: ignore
+from pymavlink.generator import mavparse
 
 
-def dialect_creator(output_dialects_path: str, xml_path: str, protocol_language: str = mavgen.DEFAULT_LANGUAGE):
+def dialect_creator(output_dialects_path: str, xml_path: str, protocol_language: str = mavgen.DEFAULT_LANGUAGE) -> None:
     """
     :param output_dialects_path: path for outputs
     :param xml_path: xml containing message definitions
