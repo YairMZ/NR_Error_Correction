@@ -56,3 +56,4 @@ class MavlinkDialectMeta:
 
 mav_obj = dialect.MAVLink(1)
 dialect_meta = MavlinkDialectMeta(STX, header_length, crc_length, msg_ids, field_lengths, mav_obj.decode)
+__all__ = ["MAVError", "dialect_meta"]
