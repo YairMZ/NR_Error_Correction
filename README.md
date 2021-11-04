@@ -43,4 +43,3 @@ to run also coverage tests.
 
 --------------------------
 For questions or suggestions [contact me](mailto:yairmazal@gmail.com?subject=[GitHub]%20NR%20Error%20Correction).
-
