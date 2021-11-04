@@ -1,5 +1,5 @@
 from protocol_meta import dialect_meta as meta
-from decoders import Decoder
+from decoders import EntropyDecoder
 from inference import BufferSegmentation, MsgParts
 
 import pickle
@@ -18,7 +18,7 @@ bad_transmissions = [bytes(tx) for tx in bad_transmissions]
 
 all_transmissions = [bytes(tx) for tx in ship_rx["encoded_rx"]]
 
-decoder = Decoder()
+decoder = EntropyDecoder()
 bs = BufferSegmentation(meta.protocol_parser)
 interesting_buffers = []
 for idx, buffer in enumerate(all_transmissions):
