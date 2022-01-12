@@ -3,7 +3,7 @@ from inference import BufferSegmentation, MsgParts
 from protocol_meta import dialect_meta as meta
 
 import pickle
-with open('../data/June_20_Rafael/hc_to_ship.pickle', 'rb') as f:
+with open('../runs/June_20_Rafael/hc_to_ship.pickle', 'rb') as f:
     ship_rx = pickle.load(f)
 
 good_transmissions = [buffer for is_success, buffer in zip(ship_rx["rx_success"], ship_rx["encoded_rx"])
