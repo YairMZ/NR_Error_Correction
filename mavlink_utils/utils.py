@@ -21,7 +21,7 @@ def dialect_creator(output_dialects_path: str, xml_path: str, protocol_language:
 if __name__ == "__main__" and __package__ is None:
     from os import path, getcwd
 
-    xml_defs_path = path.join(path.dirname(getcwd()), 'clustering_dialect.xml')
-    output_path = 'clustering_dialect.py'
+    xml_defs_path = path.join(path.dirname(getcwd()), 'HC_dialect.xml')
+    output_path = 'HC_dialect.py'
 
     dialect_creator(output_path, xml_defs_path)
