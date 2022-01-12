@@ -31,8 +31,8 @@ if __name__ == '__main__':
     parser.add_argument("--maxflip", default=1 * 1e-2, help="maximal bit flip probability to consider", type=float)
     parser.add_argument("--nflips", default=3, help="number of bit flips to consider", type=int)
     args = parser.parse_args()
-    
-    
+
+
     encoder = EncoderWiFi(WiFiSpecCode.N1944_R23)
 
     with open('data/hc_to_ship.pickle', 'rb') as f:
