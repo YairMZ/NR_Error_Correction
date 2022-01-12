@@ -1,11 +1,12 @@
 """meta data of specific mavlink dialect"""
-import mavlink_utils.clustering_dialect as dialect
-from mavlink_utils.clustering_dialect import MAVError  # expose class directly to whomever imports meta
+import mavlink_utils.HC_dialect as dialect
+from mavlink_utils.HC_dialect import MAVError  # expose class directly to whomever imports meta
 from typing import Callable
 from collections.abc import MutableSequence
 
 STX = dialect.PROTOCOL_MARKER_V1
-field_lengths = {"uint32_t": 4, "float": 4, "uint16_t": 2, "uint8_t": 1, "int32_t": 4, }  # field length in bytes
+field_lengths = {"uint32_t": 4, "float": 4, "uint16_t": 2, "uint8_t": 1, "int32_t": 4, "int16_t": 2, "int8_t": 1,
+                 "uint64_t": 8, "char": 1, "int64_t": 8}  # field length in bytes
 msg_ids = list(dialect.mavlink_map.keys())
 header_length = dialect.HEADER_LEN_V1
 crc_length = 2
