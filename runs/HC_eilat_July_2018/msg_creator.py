@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 from scipy.io import savemat
 
-mat = scipy.io.loadmat("20_08_2018_13_12_11.mat")
+mat = scipy.io.loadmat("data/20_08_2018_13_12_11.mat")
 mav = dialect.MAVLink(1, 1, 1)
 
 # global_position_int
@@ -114,12 +114,12 @@ for delay, time_vec in time_vecs.items():
         msgs.append(d)
     all_msgs[delay] = msgs
 
-with open('hc_to_ship.pickle', 'wb') as file_b:
+with open('data/hc_to_ship.pickle', 'wb') as file_b:
     pickle.dump(all_msgs, file_b)
 
 five_sec_bin = [[int(b) for b in tx.get("bin")] for tx in all_msgs.get("50000")]
 ten_sec_bin = [[int(b) for b in tx.get("bin")] for tx in all_msgs.get("100000")]
 twenty_sec_bin = [[int(b) for b in tx.get("bin")] for tx in all_msgs.get("200000")]
 thirty_sec_bin = [[int(b) for b in tx.get("bin")] for tx in all_msgs.get("300000")]
-savemat("binary_buffers.mat", {"five_sec_delay_binary": five_sec_bin, "ten_sec_delay_binary": ten_sec_bin,
+savemat("data/binary_buffers.mat", {"five_sec_delay_binary": five_sec_bin, "ten_sec_delay_binary": ten_sec_bin,
                                "twenty_sec_delay_binary": twenty_sec_bin, "thirty_sec_delay_binary": thirty_sec_bin})
