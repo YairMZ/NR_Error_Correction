@@ -1,0 +1,9 @@
+The data comprises of real sensor data from the HC.
+
+To simulate tx data, sensor data was sampled at various intervals: 5, 10, 20, and 30 seconds delay between samples.
+Five messages were buffered in the following orders:
+	1. position
+	2. pinger_data
+	3. attitude
+	4. svs
+	5. chamber_status
