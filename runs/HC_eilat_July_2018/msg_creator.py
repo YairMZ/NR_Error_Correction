@@ -25,9 +25,7 @@ global_position_int_hdg = global_position_int[10].flatten()
 initial_time = global_position_int_time[0]
 final_time = global_position_int_time[16521]
 delays = [50000, 100000, 200000, 300000]
-time_vecs = {}
-for delay in delays:
-    time_vecs[str(delay)] = np.arange(initial_time, final_time, delay)
+time_vecs = { str(delay): np.arange(initial_time, final_time, delay) for delay in delays }
 
 # pinger_data
 pinger_data = mat.get('pinger_data')[0][0][0][0]
