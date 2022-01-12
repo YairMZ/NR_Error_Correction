@@ -72,8 +72,8 @@ if __name__ == '__main__':
         results[-1]["buffer_success_rate"] = sum([int(res[2]) for res in decoded_ldpc]) / float(n)
         results[-1]["raw_ber"] = p
         results[-1]["buffer_len"] = len(encoded[0])
-        results[-1]["decoder_ber"] = sum([hamming_distance(encoded[idx], Bits(auto=decoded_ldpc[idx][0]))
-                                          for idx in range(len(encoded))]) / float(len(encoded) * len(encoded[0]))
+        results[-1]["decoder_ber"] = sum(hamming_distance(encoded[idx], Bits(auto=decoded_ldpc[idx][0]))
+                                          for idx in range(len(encoded))) / float(len(encoded) * len(encoded[0]))
         print("successful decoding for bit flip probability p=", p, ", is: ", sum([int(res[2]) for res in decoded_ldpc]),
               "/", n)
 
