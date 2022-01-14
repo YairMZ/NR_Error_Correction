@@ -1,6 +1,3 @@
-from protocol_meta import dialect_meta as meta
-from decoders import EntropyDecoder
-from inference import BufferSegmentation, MsgParts
 import pickle
 from bitstring import Bits, BitArray
 import numpy as np
@@ -35,7 +32,7 @@ n = args.N if args.N > 0 else len(five_sec_bin)
 
 # corrupt data
 rng = np.random.default_rng()
-bit_flip_p = np.geomspace(args.minflip, args.maxflip, num=args.nflips)
+bit_flip_p = np.linspace(args.minflip, args.maxflip, num=args.nflips)
 results: list[dict[str, Any]] = []
 
 encoded = []
@@ -48,7 +45,7 @@ n = len(encoded)
 
 for p in bit_flip_p:
     decoder = DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=n_iterations)
-    no_errors = int(len(five_sec_bin[0]) * p * 8)  # 8 bits per byte
+    no_errors = int(encoder.n * p)
     rx = []
     decoded_ldpc = []
     results.append({'data': five_sec_bin[:n]})
@@ -67,7 +64,7 @@ for p in bit_flip_p:
     results[-1]['decoded_ldpc'] = decoded_ldpc
     results[-1]["buffer_success_rate"] = sum(int(res[2]) for res in decoded_ldpc) / float(n)
 
-    results[-1]["raw_ber"] = p
+    results[-1]["raw_ber"] = no_errors / encoder.n
     results[-1]["buffer_len"] = len(encoded[0])
     results[-1]["decoder_ber"] = sum(
         hamming_distance(encoded[idx], Bits(auto=decoded_ldpc[idx][0]))
