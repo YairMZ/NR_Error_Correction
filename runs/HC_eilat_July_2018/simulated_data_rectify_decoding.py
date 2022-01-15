@@ -22,7 +22,7 @@ parser.add_argument("--N", default=0, help="max number of transmissions to consi
 parser.add_argument("--minflip", default=30*1e-3, help="minimal bit flip probability to consider", type=float)
 parser.add_argument("--maxflip", default=45*1e-3, help="maximal bit flip probability to consider", type=float)
 parser.add_argument("--nflips", default=3, help="number of bit flips to consider", type=int)
-parser.add_argument("--ldpciterations", default=5, help="number of iterations of  LDPC decoder", type=int)
+parser.add_argument("--ldpciterations", default=10, help="number of iterations of  LDPC decoder", type=int)
 parser.add_argument("--segiterations", default=2, help="number of exchanges between LDPC and CB decoder", type=int)
 
 args = parser.parse_args()
@@ -61,7 +61,7 @@ n = len(encoded)
 for p in bit_flip_p:
     ldpc_decoder = DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations)
     decoder = RectifyingDecoder(DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations),
-                                seg_iter, encoder.k, p)
+                                seg_iter,ldpc_iterations, encoder.k, p)
     no_errors = int(encoder.n * p)
     rx = []
     decoded_ldpc = []
