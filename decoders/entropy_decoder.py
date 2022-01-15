@@ -6,6 +6,8 @@ from typing import Union
 from protocol_meta import FrameHeader
 from algo import EntropyAlgorithm
 from data_models import EntropyModel
+from bitstring import Bits
+from collections.abc import Sequence
 
 
 class EntropyDecoder(Decoder):
@@ -14,16 +16,18 @@ class EntropyDecoder(Decoder):
         self.known_structures: list[BufferStructure] = []
         self.known_senders: dict[int, KnownSender] = {}
         self.segmentor: BufferSegmentation = BufferSegmentation(meta.protocol_parser)
-        super().__init__(DecoderType.ENTROPY, data_model=EntropyModel(117))   # TODO: Change the hardcoded values
+        self.data_model: EntropyModel = EntropyModel(117)  # TODO: Change the hardcoded values
+        super().__init__(DecoderType.ENTROPY)
         self.algorithm = EntropyAlgorithm(self.data_model, 1)  # TODO: Change the hardcoded values
 
-    def decode_buffer(self, buffer: bytes) -> tuple[bytes, bool]:
+    def decode_buffer(self, channel_word: Sequence[int]) -> tuple[bytes, bool]:
         """decodes a buffer
 
-        :param buffer: buffer to decode
+        :param channel_word: buffer to decode, input is a sequence of bit values.
         :return: returns a tuple (decoded_data, decoding_success)
         :rtype: tuple[bytes, bool]
         """
+        buffer = Bits(auto=channel_word).tobytes()
         msg_parts, validity, structure = self.segmentor.segment_buffer(buffer)
         if structure:  # if messages were found register them to sender
             for idx, msg_id in structure.items():

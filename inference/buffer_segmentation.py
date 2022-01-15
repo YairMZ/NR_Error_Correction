@@ -1,4 +1,4 @@
-"""break down a buffer to good and bad parts. Classify buffer parts according to protocol meta data"""
+"""break down a buffer to good and bad parts. Classify buffer parts according to protocol metadata"""
 from __future__ import annotations
 from enum import Enum
 from protocol_meta import dialect_meta as meta
@@ -76,19 +76,19 @@ class BufferSegmentation:
         """
         self.protocol_parser = protocol_parser_handler
 
-    def segment_buffer(self, buffer: bytes) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.float64], dict[int, int]]:
+    def segment_buffer(self, buffer: bytes) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.float_], dict[int, int]]:
         """
         Breaks down a buffer to several MAVLink messages. Doesn't attempt any
         reconstruction, only break down to good and bad parts.
 
         :param buffer: a buffer containing one or more MAVLink msgs
-        :return: a tuple. The first element is a np.ndarray of predicted message parts. The second is an np.ndarray of
+        :return: a tuple. The first element is a np.ndarray of predicted message parts. The second is a np.ndarray of
         bit validity. The third is a BufferStructure object.
         """
 
-        msg_parts = np.array([MsgParts.UNKNOWN]*len(buffer))  # Holds an enum value per bytes of the message.
+        msg_parts: npt.NDArray[np.object_] = np.array([MsgParts.UNKNOWN]*len(buffer))  # enum value per bytes of the buffer.
         # It tells how was it classified
-        bit_validity = np.array([0]*len(buffer) * 8)  # This tells how certain are we of the correctness of bit value.
+        bit_validity: npt.NDArray[np.float_] = np.array([0]*len(buffer) * 8, dtype=np.float_)  # certainty of bit values.
         # 1 is correct, -1 is incorrect, and 0 is unknown
         buffer_structure: dict[int, int] = {}
 
@@ -115,8 +115,9 @@ class BufferSegmentation:
                     # register structure
                     buffer_structure[byte_idx] = header.msg_id
                 except MAVError as e:
-                    print(e)
-                    print(candidate_buffer)
+                    pass
+                    # print(e)
+                    # print(candidate_buffer)
 
         return msg_parts, bit_validity, buffer_structure
 
@@ -125,7 +126,7 @@ class BufferSegmentation:
         """The function returns sub buffers of bad parts
 
         :param buffer: a buffer containing one or more MAVLink msgs
-        :param msg_parts: an np.ndarray which holds an enum value per bytes of the message, which tells how was it
+        :param msg_parts: a np.ndarray which holds an enum value per bytes of the message, which tells how was it
         classified.
         :return: a dict with keys as byte index in original buffer and values of bad sub buffers
         """
@@ -153,7 +154,7 @@ class BufferSegmentation:
         """The function returns sub buffers of bad parts
 
         :param buffer: a buffer containing one or more MAVLink msgs
-        :param msg_parts: an np.ndarray which holds an enum value per bytes of the message, which tells how was it
+        :param msg_parts: a np.ndarray which holds an enum value per bytes of the message, which tells how was it
         classified.
         :return: a list of tuples, each tuple has a starting and ending index of a bad buffer part, and none if buffer
         is good

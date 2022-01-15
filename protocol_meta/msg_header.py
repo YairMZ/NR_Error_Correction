@@ -71,7 +71,7 @@ class FrameHeader:
         if sys_id < 0 or comp_id < 0 or seq < 0 or sys_id > 255 or comp_id > 255 or seq > 255:
             raise NonUint8("invalid input, msg_id: {}, comp_id: {}, seq: {}".format(msg_id, comp_id, seq))
         if msg_id in meta.msgs_length:
-            length: int = meta.msgs_length.get(msg_id)
+            length: int = meta.msgs_length.get(msg_id)  # type: ignore
         elif msg_id < 0 or msg_id > 255:
             raise NonUint8(msg_id)
         else:
