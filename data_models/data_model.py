@@ -7,6 +7,7 @@ from typing import Any
 class ModelType(Enum):
     """Enumerate models"""
     ENTROPY = auto()
+    NO_MODEL = auto()
 
 
 class DataModel(ABC):

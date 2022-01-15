@@ -115,8 +115,9 @@ class BufferSegmentation:
                     # register structure
                     buffer_structure[byte_idx] = header.msg_id
                 except MAVError as e:
-                    print(e)
-                    print(candidate_buffer)
+                    pass
+                    # print(e)
+                    # print(candidate_buffer)
 
         return msg_parts, bit_validity, buffer_structure
 

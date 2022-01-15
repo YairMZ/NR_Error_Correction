@@ -2,16 +2,18 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from data_models import DataModel
+from typing import Optional
 
 
 class DecoderType(Enum):
     """Enumerate models"""
     ENTROPY = auto()
+    RECTIFYING = auto()
 
 
 class Decoder(ABC):
     """The class serves as a base class for all data models, and server as an interface"""
-    def __init__(self, decoder_type: DecoderType, data_model: DataModel):
+    def __init__(self, decoder_type: DecoderType, data_model: Optional[DataModel] = None):
         self.decoder_type = decoder_type
         self.data_model = data_model
 
