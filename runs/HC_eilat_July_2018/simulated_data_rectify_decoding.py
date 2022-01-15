@@ -85,8 +85,8 @@ for p in bit_flip_p:
         if decoded_rectify[-1][2] is False:
             print("rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=decoded_ldpc[-1][0]), encoded[tx_idx]))
         print("tx id: ", tx_idx)
-    print("successful pure decoding for bit flip p=", p, ", is: ", sum(int(res[2]) for res in decoded_ldpc), "/", n)
-    print("successful rectified decoding for bit flip p=", p, ", is: ", sum(int(res[2]) for res in decoded_rectify), "/", n)
+    print("successful pure decoding for bit flip p=", p, ", is: ", sum(int(res[5]==0) for res in decoded_ldpc), "/", n)
+    print("successful rectified decoding for bit flip p=", p, ", is: ", sum(int(res[4]==0) for res in decoded_rectify), "/", n)
     results[-1]['encoded'] = encoded
     results[-1]['rx'] = rx
     results[-1]['decoded_ldpc'] = decoded_ldpc
@@ -108,7 +108,6 @@ for p in bit_flip_p:
 
     results[-1]["n"] = n
     results[-1]["n_ldpc_iterations"] = ldpc_iterations
-
 
 
 timestamp = str(datetime.date.today()) + "_" + str(datetime.datetime.now().hour) + "_" + str(datetime.datetime.now().minute)
