@@ -1,0 +1,1 @@
+python simulated_data_only_LDPC.py --minflip $((5*1e-3)) --maxflip $((75*1e-3)) --nflips 20 --niterations 5
