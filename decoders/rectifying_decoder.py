@@ -44,10 +44,11 @@ class RectifyingDecoder(Decoder):
         found = 0
         self.ldpc_decoder.update_channel_model({node: self.bad_p for node in self.v_node_uids})
         ldpc_iter = self.ldpc_iterations - 2 * self.segmentation_iterations
+        estimate = np.array(channel_word, dtype=np.int_)
         for _ in range(self.segmentation_iterations + 1):
-            channel_word, llr, decode_success, ldpc_iteration = self.ldpc_decoder.decode(
-                channel_word, ldpc_iter)
-            info_bytes = self.ldpc_decoder.info_bits(np.array(channel_word)).tobytes()
+            estimate, llr, decode_success, ldpc_iteration = self.ldpc_decoder.decode(
+                estimate, ldpc_iter)
+            info_bytes = self.ldpc_decoder.info_bits(np.array(estimate)).tobytes()
             parts, validity, structure = self.bs.segment_buffer(info_bytes)
             if decode_success:
                 break
@@ -58,4 +59,4 @@ class RectifyingDecoder(Decoder):
             good_bits = np.repeat(parts != MsgParts.UNKNOWN, 8)
             d = {pair[0]: self.good_p if pair[1] else self.bad_p for pair in zip(self.v_node_uids, good_bits)}
             self.ldpc_decoder.update_channel_model(d)
-        return channel_word, llr, decode_success, len(structure)
+        return estimate, llr, decode_success, len(structure)

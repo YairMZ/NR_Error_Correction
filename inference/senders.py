@@ -16,7 +16,7 @@ class KnownSender:
         self.comp_id: dict[int, int] = {}  # keys are comp_id's, values are count
         self.msg_count: int = 0  # overall msg count for sender
         self.msgs_log: dict[int, dict[int, list[bytes]]] = {}
-        # overall message log for sender including msg_id, comp_id and and actual buffer.
+        # overall message log for sender including msg_id, comp_id and actual buffer.
         # Keys are comp_id, and values are dicts with keys as msg_ids. These dicts have as value a list of buffers.
         # example: {comp_id1: {msg_id1: [buff1, buff2], msg_id2: [buff3, buff4, buff5]}}
 

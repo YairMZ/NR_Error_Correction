@@ -13,7 +13,7 @@ import numpy.typing as npt
 class EntropyModel(DataModel):
     """The model receives buffers of sme length, and assumes they share the same structure. The entropy of each element
     (bit or byte) in the buffer is calculated across samples (different buffers). The model assumes elements with low
-    entropy are more likely to be be structural, and less likely to change.
+    entropy are more likely to be structural, and less likely to change.
     """
     alphabet_size_dict = {"uint8": 256, "uint16": 65536, "uint32": 4294967296, "int8": 256, "int16": 65536,
                           "int32": 4294967296}
@@ -36,10 +36,10 @@ class EntropyModel(DataModel):
         self.element_type = np.uint8 if bitwise else self.data_type.get(element_type)
         self.alphabet_size = self.alphabet_size_dict.get(element_type)
         self.data: npt.NDArray[Any] = np.array([])  # 2d array, each column is a sample
-        self.distribution: npt.NDArray[np.float64] = np.array([])  # estimated distribution
-        self.entropy: npt.NDArray[np.float64] = np.array([])
+        self.distribution: npt.NDArray[np.float_] = np.array([])  # estimated distribution
+        self.entropy: npt.NDArray[np.float_] = np.array([])
         self.structural_elements: npt.NDArray[np.int64] = np.array([])  # indices of elements with low entropy
-        self.structural_elements_values: npt.NDArray[np.float64] = np.array([])  # mean value of structural elements
+        self.structural_elements_values: npt.NDArray[np.float_] = np.array([])  # mean value of structural elements
         super().__init__(ModelType.ENTROPY)
 
     def update_model(self, new_data: bytes, **kwargs: Any) -> None:
@@ -49,7 +49,7 @@ class EntropyModel(DataModel):
         """
         if len(new_data) != self.buffer_length:
             raise IncorrectBufferLength()
-        arr = np.array([np.frombuffer(new_data, dtype=self.element_type)]).T
+        arr: npt.NDArray[Any] = np.array([np.frombuffer(new_data, dtype=self.element_type)]).T
         if self.bitwise:
             arr = np.unpackbits(arr, axis=0)
         self.data = arr if self.data.size == 0 else np.append(self.data, arr, axis=1)
@@ -66,7 +66,7 @@ class EntropyModel(DataModel):
         :raises: ValueError if entropy_threshold kw isn't provided
         :rtype: tuple[bytes, np.ndarray]
         """
-        observation = np.array([np.frombuffer(data, dtype=self.element_type)]).T
+        observation: npt.NDArray[Any] = np.array([np.frombuffer(data, dtype=self.element_type)]).T
         if self.bitwise:
             observation = np.unpackbits(observation, axis=0)
         if isinstance(kwargs.get("entropy_threshold"), (float, int)):

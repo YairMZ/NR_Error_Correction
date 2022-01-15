@@ -1,28 +1,29 @@
 """various statistical functions, information theory measures, and convenience wrappers around scipy"""
 import numpy as np
-from scipy.stats import entropy as scipy_ent  # type: ignore
+from scipy.stats import entropy as scipy_ent
 from typing import Any, Optional
 from utils.custom_exceptions import UnsupportedDtype
 import numpy.typing as npt
 
 
-def prob_with_alphabet(data: npt.NDArray[Any]) -> tuple[npt.NDArray[np.float64], list[Any]]:
+def prob_with_alphabet(data: npt.NDArray[Any]) -> tuple[npt.NDArray[np.float_], list[Any]]:
     """Estimate the probability distribution given samples. Doesn't work with floating point values.
 
     :param data: a 1D or 2D numpy array. Each row is a dimension and each column an observation
-    :return: a tuple: prob, alphabet. prob is a 2D array of of probabilities. Rows are RV dimension, and columns
+    :return: a tuple: prob, alphabet. prob is a 2D array of probabilities. Rows are RV dimension, and columns
     are alphabet size, alphabet is a list with the inferred alphabet.
     """
-    if data.dtype in [float, np.dtype(np.float64)]:
+    if data.dtype in [float, np.dtype(np.float_)]:
         raise UnsupportedDtype()
     # TODO - add ability to return joint distribution - can be done with np.unique along axis
 
     if data.ndim == 2:
         alphabet: list[Any] = np.unique(data).tolist()
         alphabet_size = len(alphabet)
-        pr: npt.NDArray[Any] = np.zeros((data.shape[0], alphabet_size))
+        pr: npt.NDArray[np.float_] = np.zeros((data.shape[0], alphabet_size))
         num_samples = data.shape[1]
         for row_idx, row in enumerate(data):
+            values: npt.NDArray[Any]
             values, counts = np.unique(row, return_counts=True)
             for val, count in zip(values, counts):
                 pr[row_idx][alphabet.index(val)] = count
@@ -30,6 +31,7 @@ def prob_with_alphabet(data: npt.NDArray[Any]) -> tuple[npt.NDArray[np.float64],
         return pr, alphabet
     elif data.ndim == 1:
         num_samples = data.shape[0]
+        alphabet_arr: npt.NDArray[Any]
         alphabet_arr, pr = np.unique(data, return_counts=True)
         pr = np.divide(pr, num_samples)
         return pr, alphabet_arr.tolist()
@@ -37,11 +39,11 @@ def prob_with_alphabet(data: npt.NDArray[Any]) -> tuple[npt.NDArray[np.float64],
         raise ValueError("only scalar and vector RV's currently supported (dim=1,2)")
 
 
-def prob(data: npt.NDArray[Any]) -> npt.NDArray[np.float64]:
+def prob(data: npt.NDArray[Any]) -> npt.NDArray[np.float_]:
     """A wrapper around prob_with_alphabet which doesn't return the alphabet.
 
     :param data: a 1D or 2D numpy array. Each row is a dimension and each column an observation
-    :return: a 2D array of of probabilities. Rows are RV dimension, and columns are alphabet size.
+    :return: a 2D array of probabilities. Rows are RV dimension, and columns are alphabet size.
     """
     pr, alphabet = prob_with_alphabet(data)
     return pr
@@ -66,7 +68,7 @@ def entropy(pk: npt.NDArray[Any], base: int = 2) -> npt.NDArray[Any]:
 def typical_set_cardinality(n: int, pk: Optional[npt.NDArray[Any]] = None, ent: Optional[float] = None,
                             eps: float = 1e-5) -> tuple[float, float]:
     # noinspection LongLine
-    """Given an distribution describing an i.i.d process, how many typical sequences of length n are there?
+    """Given a distribution describing an i.i.d process, how many typical sequences of length n are there?
 
     The cardinality of a typical set is dictated by the AEP. See:
     https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-441-information-theory-spring-2010/lecture-notes/MIT6_441S10_lec03.pdf

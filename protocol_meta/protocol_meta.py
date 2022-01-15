@@ -34,24 +34,24 @@ class MavlinkDialectMeta:
         The list is ordered according to the over the air order used by the protocol. For details see:
         https://mavlink.io/en/guide/serialization.html#field_reordering
         """
-        obj: type = dialect.mavlink_map.get(msg_id)
+        obj: type = dialect.mavlink_map.get(msg_id)  # type: ignore
         if not issubclass(obj, dialect.MAVLink_message):
             raise ValueError()
-        num_of_fields = len(obj.fieldnames)
+        num_of_fields = len(obj.fieldnames)  # type: ignore
         unordered_fieldnames = {
-            obj.fieldnames[i]: obj.fieldtypes[i]
+            obj.fieldnames[i]: obj.fieldtypes[i]  # type: ignore
             for i in range(num_of_fields)}
-        ordered_fieldnames: list[str] = obj.ordered_fieldnames
+        ordered_fieldnames: list[str] = obj.ordered_fieldnames  # type: ignore
         fields: list[tuple[str, str]] = [("", "")] * num_of_fields
         for i in range(num_of_fields):
             fields[i] = (ordered_fieldnames[i], unordered_fieldnames.get(ordered_fieldnames[i], ""))
         return fields
 
     def __msg_len(self, msg_id: int) -> int:
-        obj: type = dialect.mavlink_map.get(msg_id)
+        obj: type = dialect.mavlink_map.get(msg_id)  # type: ignore
         if not issubclass(obj, dialect.MAVLink_message):
             raise ValueError()
-        field_types = obj.fieldtypes
+        field_types = obj.fieldtypes  # type: ignore
         return sum(self.field_lengths[field] for field in field_types)
 
 

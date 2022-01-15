@@ -14,12 +14,12 @@ class TestProbability:
 
     def test_multi_dimension(self) -> None:
         data = np.random.randint(10, size=(10, 10))
-        p: npt.NDArray[np.float64] = prob(data)
+        p: npt.NDArray[np.float_] = prob(data)
         assert 10 == p.shape[0]
 
     def test_one_dimension(self) -> None:
         data = np.random.randint(10, size=10)
-        p: npt.NDArray[np.float64] = prob(data)
+        p: npt.NDArray[np.float_] = prob(data)
         assert 1 == p.ndim
 
     def test_probability(self) -> None:
@@ -52,29 +52,29 @@ class TestProbability:
 
 class TestEntropy:
     def test_1d_array(self) -> None:
-        p: npt.NDArray[np.int64] = np.ones(10)/10
+        p: npt.NDArray[np.float_] = np.ones(10)/10
         e = entropy(p)
         assert e == pytest.approx(np.log2(10))
         assert isinstance(e, np.ndarray)
 
     def test_2d_array(self) -> None:
-        p: npt.NDArray[np.int64] = np.ones((2, 10))/10
-        e: npt.NDArray[np.float64] = entropy(p)
+        p: npt.NDArray[np.float_] = np.ones((2, 10))/10
+        e: npt.NDArray[np.float_] = entropy(p)
         assert e[0] == pytest.approx(np.log2(10))
         assert e[1] == pytest.approx(np.log2(10))
         assert isinstance(e, np.ndarray)
 
     def test_zero_mass_probability_1d(self) -> None:
-        p: npt.NDArray[np.float64] = np.ones(10) / 9
+        p: npt.NDArray[np.float_] = np.ones(10) / 9
         p[9] = 0
         e = entropy(p)
         assert e == pytest.approx(np.log2(9))
         assert isinstance(e, np.ndarray)
 
     def test_zero_mass_probability_2d(self) -> None:
-        p: npt.NDArray[np.float64] = np.ones((2, 10))/9
+        p: npt.NDArray[np.float_] = np.ones((2, 10))/9
         p[:, 9] = 0
-        e: npt.NDArray[np.float64] = entropy(p)
+        e: npt.NDArray[np.float_] = entropy(p)
         assert e[0] == pytest.approx(np.log2(9))
         assert e[1] == pytest.approx(np.log2(9))
         assert isinstance(e, np.ndarray)

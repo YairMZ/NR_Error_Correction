@@ -23,4 +23,4 @@ def hamming_distance(a: Union[bitstring.Bits, bytes, int], b: Union[bitstring.Bi
         b = bitstring.Bits(uint=b, length=uint_len)
     if not (isinstance(a, bitstring.Bits) and isinstance(b, bitstring.Bits)):
         raise TypeError()
-    return (a ^ b).count(True)
+    return int((a ^ b).count(True))

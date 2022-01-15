@@ -17,5 +17,5 @@ class IncorrectBufferLength(ValueError):
 
 
 class UnsupportedDtype(Exception):
-    """Raised when a function receives an ndarray with supported dtype"""
+    """Raised when a function receives a ndarray with supported dtype"""
     pass
