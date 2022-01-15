@@ -38,12 +38,12 @@ class TestProbability:
 
     def test_gaps_in_alphabet_2d(self) -> None:
         # Data contain "missing" integers in characters caused broadcast exception in 2d data.
-        data = np.array([[i for i in range(5, 11)], [i for i in range(15, 21)]])
+        data = np.array([list(range(5, 11)), list(range(15, 21))])
         p, alphabet = prob_with_alphabet(data)
         assert alphabet == data.flatten().tolist()
 
     def test_return_alphabet(self) -> None:
-        data = np.array([[i for i in range(5, 11)], [i for i in range(15, 21)]])
+        data = np.array([list(range(5, 11)), list(range(15, 21))])
         p, alphabet = prob_with_alphabet(data)
         assert alphabet == data.flatten().tolist()
         p, alphabet = prob_with_alphabet(data[0])
