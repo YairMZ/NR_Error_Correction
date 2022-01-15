@@ -1,2 +1,5 @@
 # run only LDPC on simulated data
 python simulated_data_only_LDPC.py --N 50 --minflip $((3*1e-3)) --maxflip $((9*1e-3)) --nflips 20 --niterations 5
+
+# run pure LDPC as well the rectified LDPC
+python simulated_data_rectify_decoding.py --minflip $((5*1e-3)) --maxflip $((75*1e-3)) --nflips 20 --ldpciterations 5 --segiterations 2
