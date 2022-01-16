@@ -24,6 +24,7 @@ parser.add_argument("--maxflip", default=45*1e-3, help="maximal bit flip probabi
 parser.add_argument("--nflips", default=3, help="number of bit flips to consider", type=int)
 parser.add_argument("--ldpciterations", default=10, help="number of iterations of  LDPC decoder", type=int)
 parser.add_argument("--segiterations", default=2, help="number of exchanges between LDPC and CB decoder", type=int)
+parser.add_argument("--goodp", default=1e-7, help="number of exchanges between LDPC and CB decoder", type=float)
 
 args = parser.parse_args()
 
@@ -37,6 +38,7 @@ with open('data/hc_to_ship.pickle', 'rb') as f:
 
 five_sec_bin = [Bits(auto=tx.get("bin")) for tx in hc_tx.get("50000")]
 n = args.N if args.N > 0 else len(five_sec_bin)
+good_p = args.goodp
 
 # corrupt data
 rng = np.random.default_rng()
@@ -57,11 +59,18 @@ n = len(encoded)
 # bit indices:
 # {0: 33, 416: 234, 576: 30, 864: 212, 1080: 218}
 
+print("number of buffers to process: ", n)
+print("smallest bit flip probability: ", args.minflip)
+print("largest bit flip probability: ", args.maxflip)
+print("number of bit flips: ", args.nflips)
+print("number of ldpc decoder iterations: ", ldpc_iterations)
+print("number of segmentation iterations: ", seg_iter)
+print("good probability: ", good_p)
 
 for p in bit_flip_p:
     ldpc_decoder = DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations)
     decoder = RectifyingDecoder(DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations),
-                                seg_iter,ldpc_iterations, encoder.k, p)
+                                seg_iter, ldpc_iterations, encoder.k, p, p, good_p=good_p)
     no_errors = int(encoder.n * p)
     rx = []
     decoded_ldpc = []
@@ -83,7 +92,7 @@ for p in bit_flip_p:
         d = decoder.decode_buffer(corrupted)
         decoded_rectify.append((*d, hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
         if decoded_rectify[-1][2] is False:
-            print("rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=decoded_ldpc[-1][0]), encoded[tx_idx]))
+            print("rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=decoded_rectify[-1][0]), encoded[tx_idx]))
         print("tx id: ", tx_idx)
     print("successful pure decoding for bit flip p=", p, ", is: ", sum(int(res[5]==0) for res in decoded_ldpc), "/", n)
     print("successful rectified decoding for bit flip p=", p, ", is: ", sum(int(res[4]==0) for res in decoded_rectify), "/", n)
@@ -117,6 +126,7 @@ os.mkdir(path)
 with open(os.path.join(path, timestamp + '_simulation_rectify_vs_pure_LDPC.pickle'), 'wb') as f:
     pickle.dump(results, f)
 
+
 raw_ber = np.array([p['raw_ber'] for p in results])
 ldpc_ber = np.array([p['ldpc_decoder_ber'] for p in results])
 rectified_ber = np.array([p['rectified_decoder_ber'] for p in results])
@@ -129,3 +139,11 @@ ldpc_buffer_success_rate = np.array([p['ldpc_buffer_success_rate'] for p in resu
 rectified_buffer_success_rate = np.array([p['rectified_buffer_success_rate'] for p in results])
 plt.plot(raw_ber, ldpc_buffer_success_rate, 'bo', raw_ber, rectified_buffer_success_rate, 'r*')
 figure.savefig(os.path.join(path, "buffer_success_rate_vs_error_p.eps"), dpi=150)
+
+summary = {"n": n, "min_flip": args.minflip, "max_flip": args.maxflip, "n_flips": args.nflips,
+           "ldpc_iterations": ldpc_iterations, "segmentation_iterations": seg_iter, "good_p": good_p,
+           "raw_ber": raw_ber, "ldpc_ber": ldpc_ber, "rectified_ber": rectified_ber,
+           "ldpc_buffer_success_rate": ldpc_buffer_success_rate,
+           "rectified_buffer_success_rate": rectified_buffer_success_rate}
+with open(os.path.join(path, timestamp + '_summary_rectify_vs_pure_LDPC.pickle'), 'wb') as f:
+    pickle.dump(summary, f)

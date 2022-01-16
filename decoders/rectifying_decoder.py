@@ -16,18 +16,17 @@ class RectifyingDecoder(Decoder):
     to assume too high bit flip probability even for "bad parts"
     """
     def __init__(self, ldpc_decoder: LogSpaDecoder, segmentation_iterations: int, ldpc_iterations: int, k: int,
-                 bad_p: float, good_p: float = 1e-7) -> None:
+                 default_p: float, bad_p: float, good_p: float = 1e-7) -> None:
 
         self.ldpc_decoder = ldpc_decoder
         self.bs = BufferSegmentation(meta.protocol_parser)
         self.segmentation_iterations = segmentation_iterations
         self.ldpc_iterations = ldpc_iterations
         self.k = k
-        self.bad_p = bsc_llr(p=bad_p)
+        self.bad_p = bad_p
         self.good_p = bsc_llr(p=good_p)
+        self.default_p = bsc_llr(p=default_p)
         self.v_node_uids = [node.uid for node in self.ldpc_decoder.ordered_vnodes()][:self.k]
-        if ldpc_iterations <= segmentation_iterations * 2 or ldpc_iterations <= 5:
-            raise ValueError('not enough ldpc iterations')
         super().__init__(DecoderType.RECTIFYING)
 
     def decode_buffer(self, channel_word: Sequence[int]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int]:
@@ -42,21 +41,28 @@ class RectifyingDecoder(Decoder):
             - number of MAVLink messages found within buffer
         """
         found = 0
-        self.ldpc_decoder.update_channel_model({node: self.bad_p for node in self.v_node_uids})
-        ldpc_iter = self.ldpc_iterations - 2 * self.segmentation_iterations
+        self.ldpc_decoder.update_channel_model({node: self.default_p for node in self.v_node_uids})
+        ldpc_iter = self.ldpc_iterations
         estimate = np.array(channel_word, dtype=np.int_)
+        decode_success = False
         for _ in range(self.segmentation_iterations + 1):
-            estimate, llr, decode_success, ldpc_iteration = self.ldpc_decoder.decode(
-                estimate, ldpc_iter)
+            estimate, llr, decode_success, ldpc_iteration = self.ldpc_decoder.decode(estimate, ldpc_iter)
             info_bytes = self.ldpc_decoder.info_bits(np.array(estimate)).tobytes()
             parts, validity, structure = self.bs.segment_buffer(info_bytes)
             if decode_success:
                 break
-            if found >= len(structure):  # if we can't identify new parts no point to continue
-                break
+            # if found >= len(structure):  # if we can't identify new parts no point to continue
+            #     break
             found = len(structure)
-            ldpc_iter = 2
+            # ldpc_iter = 5
             good_bits = np.repeat(parts != MsgParts.UNKNOWN, 8)
-            d = {pair[0]: self.good_p if pair[1] else self.bad_p for pair in zip(self.v_node_uids, good_bits)}
+            bad_p = bsc_llr(p=self.bad_p*self.k/(8*sum(parts == MsgParts.UNKNOWN)))
+            d = {pair[0]: self.good_p if pair[1] else bad_p for pair in zip(self.v_node_uids, good_bits)}
             self.ldpc_decoder.update_channel_model(d)
+
+        # if not decode_success:
+        #     estimate, llr, decode_success, ldpc_iteration = self.ldpc_decoder.decode(channel_word, self.ldpc_iterations)
+        #     info_bytes = self.ldpc_decoder.info_bits(np.array(estimate)).tobytes()
+        #     parts, validity, structure = self.bs.segment_buffer(info_bytes)
+
         return estimate, llr, decode_success, len(structure)
