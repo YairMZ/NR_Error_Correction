@@ -1,5 +1,6 @@
 """rectifying decoder running script
-This script doesn't enforce equal amount of iterations for all decoders for fairness.
+This script enforces equal amount of iterations for all decoders for fairness.
+For optimal results ensure that ldpciterations is dividable by segiterations+1.
 """
 import pickle
 from bitstring import Bits, BitArray
@@ -73,11 +74,12 @@ print("good probability: ", args.goodp)
 print("bad probability: ", args.badp)
 
 for p in bit_flip_p:
-    bad_p = args.badp if args.badp > 0 else 7*p  # this will make channel llr difference of close to 2 between default and bad
-    good_p = args.goodp if args.goodp > 0 else p/7 # this will make channel llr diff of close to 2 between default and good
+    bad_p = args.badp if args.badp > 0 else p  # this will make channel llr difference of close to 3 between default and bad
+    good_p = args.goodp if args.goodp > 0 else p/20  # this will make channel llr diff of close to 3 between default and good
     ldpc_decoder = DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations)
-    rectify_decoder = RectifyingDecoder(DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations),
-                                seg_iter, ldpc_iterations, encoder.k, default_p=p, bad_p=bad_p, good_p=good_p)
+    rectify_decoder = RectifyingDecoder(DecoderWiFi(
+        bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=int(ldpc_iterations/seg_iter)),
+        seg_iter, ldpc_iterations, encoder.k, default_p=p, bad_p=bad_p, good_p=good_p)
     single_rect_decoder = RectifyingDecoderSingleSegmentation(DecoderWiFi(
         bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations), encoder.k,
         default_p=p, bad_p=bad_p, good_p=good_p)
@@ -99,15 +101,15 @@ for p in bit_flip_p:
         parts, v, s = bs.segment_buffer(b)
         decoded_ldpc.append((*d, len(s), hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
         if d[2] is False:
-            print("pure ldpc, errors after decode: ", hamming_distance(Bits(auto=d[0]), encoded[tx_idx]))
+            print("pure ldpc, errors after decode: ", decoded_ldpc[-1][5])
         d = rectify_decoder.decode_buffer(corrupted)
         decoded_rectify.append((*d, hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
         if d[2] is False:
-            print("rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=d[0]), encoded[tx_idx]))
+            print("rectified ldpc, errors after decode: ", decoded_rectify[-1][5])
         d = single_rect_decoder.decode_buffer(corrupted)
         decoded_single_rect.append((*d, hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
         if d[2] is False:
-            print("single rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=d[0]), encoded[tx_idx]))
+            print("single rectified ldpc, errors after decode: ", decoded_single_rect[-1][5])
         print("tx id: ", tx_idx)
     print("successful pure decoding for bit flip p=", p, ", is: ", sum(int(res[5] == 0) for res in decoded_ldpc), "/", n)
     print("successful rectified decoding for bit flip p=", p, ", is: ", sum(int(res[5] == 0) for res in decoded_rectify), "/",
