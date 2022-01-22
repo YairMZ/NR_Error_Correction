@@ -78,7 +78,7 @@ for p in bit_flip_p:
     good_p = args.goodp if args.goodp > 0 else p/20  # this will make channel llr diff of close to 3 between default and good
     ldpc_decoder = DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations)
     rectify_decoder = RectifyingDecoder(DecoderWiFi(
-        bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=int(ldpc_iterations/seg_iter)),
+        bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=int(ldpc_iterations/(seg_iter+1))),
         seg_iter, ldpc_iterations, encoder.k, default_p=p, bad_p=bad_p, good_p=good_p)
     single_rect_decoder = RectifyingDecoderSingleSegmentation(DecoderWiFi(
         bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations), encoder.k,
