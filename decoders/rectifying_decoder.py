@@ -29,7 +29,7 @@ class RectifyingDecoder(Decoder):
         self.v_node_uids = [node.uid for node in self.ldpc_decoder.ordered_vnodes()][:self.k]
         super().__init__(DecoderType.RECTIFYING)
 
-    def decode_buffer(self, channel_word: Sequence[int]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int, int]:
+    def decode_buffer(self, channel_word: Sequence[np.float_]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int, int]:
         """decodes a buffer
 
         :param channel_word: bits to decode

@@ -19,7 +19,7 @@ import os
 def func(buffer: tuple[Sequence[int], float, int]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int]:
     """handler"""
     decoder = DecoderWiFi(bsc_llr(p=buffer[1]), spec=WiFiSpecCode.N1944_R23, max_iter=buffer[2])
-    return decoder.decode(buffer[0])
+    return decoder.decode(buffer[0])  # type: ignore
 
 
 if __name__ == '__main__':
