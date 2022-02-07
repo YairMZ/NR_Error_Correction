@@ -75,8 +75,15 @@ if __name__ == '__main__':
         results[-1]["decoder_ber"] = sum(
             hamming_distance(encoded[idx], Bits(auto=decoded_ldpc[idx][0])) for idx in range(n)
         ) / float(n * len(encoded[0]))
-        print("successful decoding for bit flip probability p=", p, ", is: ", sum([int(res[2]) for res in decoded_ldpc]),
-              "/", n)
+        print(
+            "successful decoding for bit flip probability p=",
+            p,
+            ", is: ",
+            sum(int(res[2]) for res in decoded_ldpc),
+            "/",
+            n,
+        )
+
 
     ber_vec = np.array([p['decoder_ber'] for p in results])
     plt.plot(bit_flip_p, ber_vec, 'bo', bit_flip_p, bit_flip_p, 'r^')
@@ -87,7 +94,7 @@ if __name__ == '__main__':
     path = os.path.join("results/", timestamp)
     os.mkdir(path)
 
-    with open(os.path.join(path, timestamp + '_simulation_only_LDPC.pickle'), 'wb') as f:
+    with open(os.path.join(path, f'{timestamp}_simulation_only_LDPC.pickle'), 'wb') as f:
         pickle.dump(results, f)
 
     ber_vec = np.array([p['decoder_ber'] for p in results])
