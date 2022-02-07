@@ -97,7 +97,7 @@ class EntropyBitwiseDecoder(Decoder):
         self.structural_elements = np.flatnonzero(self.entropy < self.entropy_threshold)
         # model llr is calculated as log(Pr(c=0 | model) / Pr(c=1| model))
         llr = observation.copy()
-        if self.model_data.size > 0:
+        if self.model_data.size > 0 and self.model_data.shape[1] > 10:
             clipping = self.clipping_factor * max(llr)
             llr[self.structural_elements] += np.clip(
                 np.log(
