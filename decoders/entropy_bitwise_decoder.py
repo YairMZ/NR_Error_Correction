@@ -1,7 +1,6 @@
 from decoders import Decoder, DecoderType
 from inference import BufferSegmentation, MsgParts
 from protocol_meta import dialect_meta as meta
-from data_models import EntropyModel
 from collections.abc import Sequence
 from ldpc.decoder import LogSpaDecoder
 from numpy.typing import NDArray
