@@ -29,11 +29,11 @@ class RectifyingDecoder(Decoder):
         self.v_node_uids = [node.uid for node in self.ldpc_decoder.ordered_vnodes()][:self.k]
         super().__init__(DecoderType.RECTIFYING)
 
-    def decode_buffer(self, channel_word: Sequence[int]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int]:
+    def decode_buffer(self, channel_word: Sequence[int]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int, int]:
         """decodes a buffer
 
         :param channel_word: bits to decode
-        :return: return a tuple (estimated_bits, llr, decode_success, no_iterations)
+        :return: return a tuple (estimated_bits, llr, decode_success, no_iterations, no of mavlink messages found)
         where:
             - estimated_bits is a 1-d np array of hard bit estimates
             - llr is a 1-d np array of soft bit estimates
@@ -45,8 +45,10 @@ class RectifyingDecoder(Decoder):
         ldpc_iter = self.ldpc_iterations
         estimate = np.array(channel_word, dtype=np.int_)
         decode_success = False
+        iterations_to_convergence = 0
         for _ in range(self.segmentation_iterations + 1):
-            estimate, llr, decode_success, ldpc_iteration = self.ldpc_decoder.decode(estimate, ldpc_iter)
+            estimate, llr, decode_success, iterations = self.ldpc_decoder.decode(estimate, ldpc_iter)
+            iterations_to_convergence += iterations
             info_bytes = self.ldpc_decoder.info_bits(np.array(estimate)).tobytes()
             parts, validity, structure = self.bs.segment_buffer(info_bytes)
             if decode_success:
@@ -65,4 +67,4 @@ class RectifyingDecoder(Decoder):
         #     info_bytes = self.ldpc_decoder.info_bits(np.array(estimate)).tobytes()
         #     parts, validity, structure = self.bs.segment_buffer(info_bytes)
 
-        return estimate, llr, decode_success, len(structure)
+        return estimate, llr, decode_success, iterations_to_convergence, len(structure)

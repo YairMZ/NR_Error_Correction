@@ -1,0 +1,1 @@
+python simulated_data_rectify_decoding_equal_iterations.py --minflip 0.01 --maxflip 0.06 --nflips 30 --ldpciterations 20 --segiterations 1 --goodp 0.0001

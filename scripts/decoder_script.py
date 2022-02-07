@@ -1,6 +1,7 @@
 from protocol_meta import dialect_meta as meta
-from decoders import EntropyDecoder
+from decoders.entropy_decoder import EntropyDecoder
 from inference import BufferSegmentation, MsgParts
+import numpy as np
 
 import pickle
 
@@ -18,12 +19,12 @@ bad_transmissions = [bytes(tx) for tx in bad_transmissions]
 
 all_transmissions = [bytes(tx) for tx in ship_rx["encoded_rx"]]
 
-decoder = EntropyDecoder()
+decoder = EntropyDecoder(buffer_length=117)
 bs = BufferSegmentation(meta.protocol_parser)
 interesting_buffers = []
 for idx, buffer in enumerate(all_transmissions):
     parts, validity, structure = bs.segment_buffer(buffer)
-    decoded, success = decoder.decode_buffer(buffer)
+    decoded, success = decoder.decode_buffer(np.frombuffer(buffer))
     if MsgParts.HEADER in parts and MsgParts.UNKNOWN in parts:  # if found at least one good message
         interesting_buffers.append(idx)
         print(len(structure), " good messages")
