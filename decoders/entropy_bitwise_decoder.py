@@ -17,7 +17,7 @@ class EntropyBitwiseDecoder(Decoder):
     The decoder updates "channel" llr per model for structural bits between LDPC iterations.
     """
 
-    def __init__(self, ldpc_decoder: LogSpaDecoder, model_length: int, entropy_threshold: float,
+    def __init__(self, ldpc_decoder: LogSpaDecoder, model_length: int, entropy_threshold: float, clipping_factor: int,
                  window_length: Optional[int] = None) -> None:
         """
 
@@ -35,6 +35,7 @@ class EntropyBitwiseDecoder(Decoder):
         self.entropy_threshold = entropy_threshold
         self.model_bits_idx = self.ldpc_decoder.info_idx  # bit indices (among codeword bits) of model bits
         self.model_bits_idx[self.model_length:] = False
+        self.clipping_factor = clipping_factor  # The model llr is clipped to +-clipping_factor * max_chanel_llr
         self.window_length = window_length
         self.model_data: NDArray[np.uint8] = np.array([])  # 2d array, each column is a sample
         self.distribution: NDArray[np.float_] = np.array([])  # estimated distribution model
@@ -97,9 +98,12 @@ class EntropyBitwiseDecoder(Decoder):
         # model llr is calculated as log(Pr(c=0 | model) / Pr(c=1| model))
         llr = observation.copy()
         if self.model_data.size > 0:
-            clipping = max(llr)
-            llr[self.structural_elements] += np.clip(np.log(self.distribution[:, 0]/self.distribution[:, 1]),
-                                                     -clipping, clipping)[self.entropy < self.entropy_threshold]
+            clipping = self.clipping_factor * max(llr)
+            llr[self.structural_elements] += np.clip(
+                np.log(
+                    (np.finfo(np.float_).eps + self.distribution[:, 0])/(self.distribution[:, 1] + np.finfo(np.float_).eps)
+                ),
+                -clipping, clipping)[self.entropy < self.entropy_threshold]
         return llr
 
 
