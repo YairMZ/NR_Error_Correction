@@ -1,0 +1,26 @@
+Specs for codes:
+
+Long messages - standard Matlab codes, DVB-S.2 spec. See Matlab script regarding generation of matrices.
+123B messages - using supplied parity check matrix.
+
+It includes two parity check matrices (for the same code), one systematic and the other isn't.
+The systematic one is used for encoding.
+The non-systematic one (which is sparser) is used for decoding.
+The non-systematic H is much sparser (density of 0.0011 vs 0.08 of systematic H), which causes decoding to bo much more efficient.
+
+To use in code:
+k = size(H, 2) - size(H, 1);
+n = size(H, 2);
+
+encoding:
+[rH, cH] = find(H);
+EncHInd = [rH, cH];
+hEnc = comm.LDPCEncoder(EncHInd);
+V = step(hEnc, EncBits(1: k));
+
+
+decoding:
+[rH, cH] = find(Hnonsys);
+DecHInd = single([rH, cH]);
+hDec = comm.LDPCDecoder(DecHInd);
+V = step(hDec, DecBits(1: n));
