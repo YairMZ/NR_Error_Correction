@@ -23,12 +23,14 @@ parser.add_argument("--nflips", default=5, help="number of bit flips to consider
 parser.add_argument("--ldpciterations", default=10, help="number of iterations of  LDPC decoder", type=int)
 parser.add_argument("--ent_threshold", default=0.36, help="entropy threshold to be used in entropy decoder", type=float)
 parser.add_argument("--window_len", default=0, help="entropy threshold to be used in entropy decoder", type=int)
+parser.add_argument("--clipping_factor", default=2, help="entropy threshold to be used in entropy decoder", type=int)
 
 
 args = parser.parse_args()
 
 ldpc_iterations = args.ldpciterations
 thr = args.ent_threshold
+clipping_factor = args.clipping_factor
 
 encoder = EncoderWiFi(WiFiSpecCode.N1944_R23)
 bs = BufferSegmentation(meta.protocol_parser)
@@ -60,6 +62,7 @@ n = len(encoded)
 # bit indices:
 # {0: 33, 416: 234, 576: 30, 864: 212, 1080: 218}
 
+print(__file__)
 print("number of buffers to process: ", n)
 print("smallest bit flip probability: ", args.minflip)
 print("largest bit flip probability: ", args.maxflip)
@@ -67,11 +70,20 @@ print("number of bit flips: ", args.nflips)
 print("number of ldpc decoder iterations: ", ldpc_iterations)
 print("entropy threshold used in entropy decoder:", thr)
 print("entropy decoder window length:", window_len)
+print("clipping factor:", clipping_factor)
+
+cmd = __file__ + " --minflip " + str(args.minflip) + " --maxflip " + str(args.maxflip) + " --nflips " + str(args.nflips) + \
+    " --ldpciterations " + str(ldpc_iterations) + " --ent_threshold " + str(thr) + " --clipping_factor " + str(clipping_factor)
+if window_len is not None:
+    cmd += " --window_len " + window_len
+if args.N > 0:
+    cmd += " --N " + str(n)
 
 for p in bit_flip_p:
     ldpc_decoder = DecoderWiFi(spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations)
     entropy_decoder = EntropyBitwiseDecoder(DecoderWiFi(spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations),
-                                            model_length=model_length, entropy_threshold=thr, window_length=window_len)
+                                            model_length=model_length, entropy_threshold=thr, clipping_factor=clipping_factor,
+                                            window_length=window_len)
     no_errors = int(encoder.n * p)
     rx = []
     decoded_ldpc = []
@@ -126,10 +138,11 @@ for p in bit_flip_p:
 timestamp = str(datetime.date.today()) + "_" + str(datetime.datetime.now().hour) + "_" + str(datetime.datetime.now().minute)
 path = os.path.join("results/", timestamp)
 os.mkdir(path)
+with open(os.path.join(path, "cmd.txt"), 'w') as f:
+    f.write(cmd)
 
 with open(os.path.join(path, timestamp + '_simulation_entropy_vs_pure_LDPC.pickle'), 'wb') as f:
     pickle.dump(results, f)
-
 
 raw_ber = np.array([p['raw_ber'] for p in results])
 ldpc_ber = np.array([p['ldpc_decoder_ber'] for p in results])
