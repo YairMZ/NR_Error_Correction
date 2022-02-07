@@ -72,9 +72,26 @@ print("entropy threshold used in entropy decoder:", thr)
 print("entropy decoder window length:", window_len)
 print("clipping factor:", clipping_factor)
 
-cmd = "python " + __file__ + " --minflip " + str(args.minflip) + " --maxflip " + str(args.maxflip) + " --nflips " + \
-      str(args.nflips) + " --ldpciterations " + str(ldpc_iterations) + " --ent_threshold " + str(thr) + " --clipping_factor " \
-      + str(clipping_factor)
+cmd = (
+    (
+        (
+            (
+                f'python {__file__} --minflip '
+                + str(args.minflip)
+                + " --maxflip "
+                + str(args.maxflip)
+                + " --nflips "
+                + str(args.nflips)
+            )
+            + " --ldpciterations "
+        )
+        + str(ldpc_iterations)
+        + " --ent_threshold "
+    )
+    + str(thr)
+    + " --clipping_factor "
+) + str(clipping_factor)
+
 if window_len is not None:
     cmd += " --window_len " + str(window_len)
 if args.N > 0:
@@ -142,7 +159,7 @@ os.mkdir(path)
 with open(os.path.join(path, "cmd.txt"), 'w') as f:
     f.write(cmd)
 
-with open(os.path.join(path, timestamp + '_simulation_entropy_vs_pure_LDPC.pickle'), 'wb') as f:
+with open(os.path.join(path, f'{timestamp}_simulation_entropy_vs_pure_LDPC.pickle'), 'wb') as f:
     pickle.dump(results, f)
 
 raw_ber = np.array([p['raw_ber'] for p in results])
@@ -161,5 +178,5 @@ figure.savefig(os.path.join(path, "buffer_success_rate_vs_error_p.eps"), dpi=150
 summary = {"args": args, "raw_ber": raw_ber, "ldpc_ber": ldpc_ber, "entropy_ber": entropy_ber,
            "ldpc_buffer_success_rate": ldpc_buffer_success_rate,
            "entropy_buffer_success_rate": entropy_buffer_success_rate}
-with open(os.path.join(path, timestamp + '_summary_entropy_vs_pure_LDPC.pickle'), 'wb') as f:
+with open(os.path.join(path, f'{timestamp}_summary_entropy_vs_pure_LDPC.pickle'), 'wb') as f:
     pickle.dump(summary, f)
