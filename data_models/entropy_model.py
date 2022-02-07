@@ -62,15 +62,16 @@ class EntropyModel(DataModel):
     def predict(self, data: bytes, **kwargs: Any) -> tuple[bytes, npt.NDArray[np.float64]]:
         """Responsible for making predictions regarding originally sent data, based on recent observations and model.
         :param data: recent observation regrading which a prediction is required.
-        :param kwargs: entropy_threshold kw expected as float.
+        :param kwargs: entropy_threshold kw expected as float or int.
         :raises: ValueError if entropy_threshold kw isn't provided
         :rtype: tuple[bytes, np.ndarray]
         """
         observation: npt.NDArray[Any] = np.array([np.frombuffer(data, dtype=self.element_type)]).T
         if self.bitwise:
             observation = np.unpackbits(observation, axis=0)
-        if isinstance(kwargs.get("entropy_threshold"), (float, int)):
-            self.infer_structure(kwargs.get("entropy_threshold", 1.0))
+        threshold = kwargs.get("entropy_threshold")
+        if isinstance(threshold, (float, int)):
+            self.infer_structure(threshold)
         else:
             raise ValueError()
 
@@ -85,7 +86,8 @@ class EntropyModel(DataModel):
     def infer_structure(self, entropy_threshold: Union[float, int]) -> None:
         """structural elements are element with small enough entropy with respect to a threshold"""
         self.structural_elements = np.flatnonzero(self.entropy < entropy_threshold)
-        self.structural_elements_values = np.mean(self.data[self.structural_elements], axis=1)
+        if self.data.size > 0:
+            self.structural_elements_values = np.mean(self.data[self.structural_elements], axis=1)
 
     def get_structure(self) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
         """

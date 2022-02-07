@@ -10,7 +10,7 @@ class EntropyAlgorithm(CorrectionAlgorithm):
     different structures. Assuming a unique structure, entropy of bits is used model the data.
     Inferred structural bits are then forced to attempt correction.
     """
-    def __init__(self, data_model: EntropyModel, entropy_threshold: Union[int, float]):
+    def __init__(self, data_model: EntropyModel, entropy_threshold: Union[int, float]) -> None:
         """
         :param data_model: An EntropyModel object
         :param entropy_threshold: threshold to be used for structure inference
