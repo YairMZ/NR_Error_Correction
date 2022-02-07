@@ -55,11 +55,15 @@ class EntropyDecoder(Decoder):
         if isinstance(buffer_structure, dict) and not buffer_structure:
             raise ValueError("can't register an empty structure")
 
-        received_structure = None
-        for structure in self.known_structures:
-            if structure == buffer_structure:
-                received_structure = structure
-                break
+        received_structure = next(
+            (
+                structure
+                for structure in self.known_structures
+                if structure == buffer_structure
+            ),
+            None,
+        )
+
         if received_structure is None:  # new kind of structure
             if isinstance(buffer_structure, BufferStructure):
                 received_structure = buffer_structure
