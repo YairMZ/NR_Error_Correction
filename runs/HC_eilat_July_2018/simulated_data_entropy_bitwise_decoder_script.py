@@ -16,7 +16,7 @@ import datetime
 import os
 
 parser = argparse.ArgumentParser(description='Run decoding on simulated data using multiprocessing.')
-parser.add_argument("--N", default=30, help="max number of transmissions to consider", type=int)
+parser.add_argument("--N", default=0, help="max number of transmissions to consider", type=int)
 parser.add_argument("--minflip", default=36*1e-3, help="minimal bit flip probability to consider", type=float)
 parser.add_argument("--maxflip", default=55*1e-3, help="maximal bit flip probability to consider", type=float)
 parser.add_argument("--nflips", default=5, help="number of bit flips to consider", type=int)
@@ -72,10 +72,11 @@ print("entropy threshold used in entropy decoder:", thr)
 print("entropy decoder window length:", window_len)
 print("clipping factor:", clipping_factor)
 
-cmd = __file__ + " --minflip " + str(args.minflip) + " --maxflip " + str(args.maxflip) + " --nflips " + str(args.nflips) + \
-    " --ldpciterations " + str(ldpc_iterations) + " --ent_threshold " + str(thr) + " --clipping_factor " + str(clipping_factor)
+cmd = "python " + __file__ + " --minflip " + str(args.minflip) + " --maxflip " + str(args.maxflip) + " --nflips " + \
+      str(args.nflips) + " --ldpciterations " + str(ldpc_iterations) + " --ent_threshold " + str(thr) + " --clipping_factor " \
+      + str(clipping_factor)
 if window_len is not None:
-    cmd += " --window_len " + window_len
+    cmd += " --window_len " + str(window_len)
 if args.N > 0:
     cmd += " --N " + str(n)
 
