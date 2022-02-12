@@ -22,12 +22,12 @@ import os
 
 parser = argparse.ArgumentParser(description='Run decoding on simulated data using multiprocessing.')
 parser.add_argument("--N", default=0, help="max number of transmissions to consider", type=int)
-parser.add_argument("--minflip", default=30*1e-3, help="minimal bit flip probability to consider", type=float)
-parser.add_argument("--maxflip", default=45*1e-3, help="maximal bit flip probability to consider", type=float)
+parser.add_argument("--minflip", default=47*1e-3, help="minimal bit flip probability to consider", type=float)
+parser.add_argument("--maxflip", default=60*1e-3, help="maximal bit flip probability to consider", type=float)
 parser.add_argument("--nflips", default=3, help="number of bit flips to consider", type=int)
-parser.add_argument("--ldpciterations", default=10, help="number of iterations of  LDPC decoder", type=int)
+parser.add_argument("--ldpciterations", default=20, help="number of iterations of  LDPC decoder", type=int)
 parser.add_argument("--segiterations", default=2, help="number of exchanges between LDPC and CB decoder", type=int)
-parser.add_argument("--goodp", default=0, help="number of exchanges between LDPC and CB decoder", type=float)
+parser.add_argument("--goodp", default=1e-7, help="number of exchanges between LDPC and CB decoder", type=float)
 parser.add_argument("--badp", default=0, help="number of exchanges between LDPC and CB decoder", type=float)
 
 args = parser.parse_args()
@@ -73,13 +73,14 @@ print("good probability: ", args.goodp)
 print("bad probability: ", args.badp)
 
 for p in bit_flip_p:
-    bad_p = args.badp if args.badp > 0 else 7*p  # this will make channel llr difference of close to 2 between default and bad
-    good_p = args.goodp if args.goodp > 0 else p/7 # this will make channel llr diff of close to 2 between default and good
-    ldpc_decoder = DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations)
-    rectify_decoder = RectifyingDecoder(DecoderWiFi(bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations),
-                                seg_iter, ldpc_iterations, encoder.k, default_p=p, bad_p=bad_p, good_p=good_p)
+    channel = bsc_llr(p=p)
+    bad_p = args.badp if args.badp > 0 else p  # this will make channel llr difference of close to 2 between default and bad
+    good_p = args.goodp if args.goodp > 0 else p/7  # this will make channel llr diff of close to 2 between default and good
+    ldpc_decoder = DecoderWiFi(spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations, channel_model=channel)
+    rectify_decoder = RectifyingDecoder(DecoderWiFi(spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations),
+                                        seg_iter, ldpc_iterations, encoder.k, default_p=p, bad_p=bad_p, good_p=good_p)
     single_rect_decoder = RectifyingDecoderSingleSegmentation(DecoderWiFi(
-        bsc_llr(p=p), spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations), encoder.k,
+        spec=WiFiSpecCode.N1944_R23, max_iter=ldpc_iterations, channel_model=channel), encoder.k,
         default_p=p, bad_p=bad_p, good_p=good_p)
     no_errors = int(encoder.n * p)
     rx = []
@@ -94,20 +95,21 @@ for p in bit_flip_p:
         for idx in error_idx:
             corrupted[idx] = not corrupted[idx]
         rx.append(corrupted)
+        channel_llr = channel(np.array(corrupted, dtype=np.int_))
         d = ldpc_decoder.decode(corrupted)
         b = ldpc_decoder.info_bits(d[0]).tobytes()
         parts, v, s = bs.segment_buffer(b)
         decoded_ldpc.append((*d, len(s), hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
         if d[2] is False:
             print("pure ldpc, errors after decode: ", hamming_distance(Bits(auto=d[0]), encoded[tx_idx]))
-        d = rectify_decoder.decode_buffer(corrupted)
+        d = rectify_decoder.decode_buffer(channel_llr)
         decoded_rectify.append((*d, hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
         if d[2] is False:
             print("rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=d[0]), encoded[tx_idx]))
-        d = single_rect_decoder.decode_buffer(corrupted)
-        decoded_single_rect.append((*d, hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
-        if d[2] is False:
-            print("single rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=d[0]), encoded[tx_idx]))
+        # d = single_rect_decoder.decode_buffer(corrupted)
+        # decoded_single_rect.append((*d, hamming_distance(Bits(auto=d[0]), encoded[tx_idx])))
+        # if d[2] is False:
+        #     print("single rectified ldpc, errors after decode: ", hamming_distance(Bits(auto=d[0]), encoded[tx_idx]))
         print("tx id: ", tx_idx)
     print("successful pure decoding for bit flip p=", p, ", is: ", sum(int(res[5] == 0) for res in decoded_ldpc), "/", n)
     print("successful rectified decoding for bit flip p=", p, ", is: ", sum(int(res[5] == 0) for res in decoded_rectify), "/",

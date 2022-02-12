@@ -11,12 +11,23 @@ from numpy.typing import NDArray
 class RectifyingDecoder(Decoder):
     """
     This decoder assumes all buffers must contain at least one full MAVLink message.
-    Thus, it breaks down buffers to "good" and "bad" parts. It then updates the channel model per part.
+    Thus, it breaks down buffers to "good" and "bad" parts. It then updates the llr per part.
     Since a buffer may contain padding at the end which cannot be interpreted as messages even without errors, it is best not
     to assume too high bit flip probability even for "bad parts"
+
+
     """
     def __init__(self, ldpc_decoder: LogSpaDecoder, segmentation_iterations: int, ldpc_iterations: int, k: int,
-                 default_p: float, bad_p: float, good_p: float = 1e-7) -> None:
+                 default_p: float, bad_p: float, good_p: float) -> None:
+        """
+        :param ldpc_decoder: decoder object for BP decoding
+        :param segmentation_iterations: number of times segmentation is done.
+        :param ldpc_iterations: iterations between segmentations
+        :param k: number of information bearing bits
+        :param default_p:
+        :param bad_p:
+        :param good_p:
+        """
 
         self.ldpc_decoder = ldpc_decoder
         self.bs = BufferSegmentation(meta.protocol_parser)
@@ -29,10 +40,10 @@ class RectifyingDecoder(Decoder):
         self.v_node_uids = [node.uid for node in self.ldpc_decoder.ordered_vnodes()][:self.k]
         super().__init__(DecoderType.RECTIFYING)
 
-    def decode_buffer(self, channel_word: Sequence[np.float_]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int, int]:
+    def decode_buffer(self, channel_llr: Sequence[np.float_]) -> tuple[NDArray[np.int_], NDArray[np.float_], bool, int, int]:
         """decodes a buffer
 
-        :param channel_word: bits to decode
+        :param channel_llr: bits to decode
         :return: return a tuple (estimated_bits, llr, decode_success, no_iterations, no of mavlink messages found)
         where:
             - estimated_bits is a 1-d np array of hard bit estimates
@@ -40,31 +51,25 @@ class RectifyingDecoder(Decoder):
             - decode_success is a boolean flag stating of the estimated_bits form a valid  code word
             - number of MAVLink messages found within buffer
         """
-        found = 0
-        self.ldpc_decoder.update_channel_model({node: self.default_p for node in self.v_node_uids})
-        ldpc_iter = self.ldpc_iterations
-        estimate = np.array(channel_word, dtype=np.int_)
+        channel_llr = np.array(channel_llr, dtype=np.float_)
+        # llr_max = max(llr)
         decode_success = False
         iterations_to_convergence = 0
-        for _ in range(self.segmentation_iterations + 1):
-            estimate, llr, decode_success, iterations = self.ldpc_decoder.decode(estimate, ldpc_iter)
+        for idx in range(self.segmentation_iterations + 1):
+            estimate, llr, decode_success, iterations = self.ldpc_decoder.decode(channel_llr, self.ldpc_iterations)
             iterations_to_convergence += iterations
-            info_bytes = self.ldpc_decoder.info_bits(np.array(estimate)).tobytes()
-            parts, validity, structure = self.bs.segment_buffer(info_bytes)
+            info_bytes = self.ldpc_decoder.info_bits(estimate).tobytes()
+            parts, validity, structure = self.bs.segment_buffer(info_bytes[:self.k])
             if decode_success:
                 break
-            # if found >= len(structure):  # if we can't identify new parts no point to continue
-            #     break
-            found = len(structure)
-            # ldpc_iter = 5
-            good_bits = np.repeat(parts != MsgParts.UNKNOWN, 8)
-            bad_p = bsc_llr(p=self.bad_p*self.k/(8*sum(parts == MsgParts.UNKNOWN)))
-            d = {pair[0]: self.good_p if pair[1] else bad_p for pair in zip(self.v_node_uids, good_bits)}
-            self.ldpc_decoder.update_channel_model(d)
-
-        # if not decode_success:
-        #     estimate, llr, decode_success, ldpc_iteration = self.ldpc_decoder.decode(channel_word, self.ldpc_iterations)
-        #     info_bytes = self.ldpc_decoder.info_bits(np.array(estimate)).tobytes()
-        #     parts, validity, structure = self.bs.segment_buffer(info_bytes)
+            good_bits = np.flatnonzero(np.repeat(parts != MsgParts.UNKNOWN, 8))
+            if good_bits.size > 0 and idx < self.segmentation_iterations:
+                bad_bits = np.flatnonzero(np.repeat(parts == MsgParts.UNKNOWN, 8))
+                bad_p = bsc_llr(p=self.bad_p*self.k/bad_bits.size)
+                rect = np.array(channel_llr < 0, dtype=np.float_)
+                rect[good_bits] = self.good_p(rect[good_bits])
+                rect[bad_bits] = bad_p(rect[bad_bits])
+                rect[self.k:] = self.default_p(rect[self.k:])
+                channel_llr = rect
 
         return estimate, llr, decode_success, iterations_to_convergence, len(structure)
